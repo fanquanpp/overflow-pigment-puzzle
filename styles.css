@@ -1,0 +1,1162 @@
+/* ==========================================================================
+   OVERFLOW — interface
+   --------------------------------------------------------------------------
+   Two references, taken seriously rather than quoted:
+
+   Swiss International Style (Müller-Brockmann, Hofmann, Gerstner)
+     A strict grid. Flush-left, ragged-right text. One type family at a few
+     sizes with real hierarchy, not many sizes with none. Hairline rules doing
+     the structural work that boxes and shadows do in other interfaces. White
+     ground. No rounded corners, no gradients, no transparency, no blur — every
+     one of those is a way of avoiding a decision about the grid.
+
+   Russian Constructivism (Lissitzky, Rodchenko, Klutsis)
+     One signal red against black and paper. Oversized numerals used as
+     composition rather than as data. Diagonals where a diagonal earns its
+     place. Hard offset shadows, as though the page were a printed sheet
+     resting on another sheet. Type set to the edge of the format.
+
+   What the two share is the useful part: a limited palette, a grid, and the
+   assumption that the reader is intelligent. So the palette here is paper,
+   ink, and one red; the grid is a visible 12-column field; and nothing is
+   decorated that is not structural.
+
+   The board is the exception, and deliberately: it is the one place in the
+   interface where many colours appear, because telling many colours apart is
+   the game. A strict neutral frame around a single chromatic field is a Swiss
+   idea, and it is also the honest way to present a colour puzzle.
+   ========================================================================== */
+
+:root {
+  /* Overwritten per album by src/render/themes.js. These are the Offset stock. */
+  --paper: #f4f3ef;
+  --paper-2: #fbfaf7;
+  --paper-3: #efeee9;
+  --ink: #0b0b0b;
+  --ink-2: rgba(11, 11, 11, 0.78);
+  --ink-3: rgba(11, 11, 11, 0.55);
+  --red: #da291c;
+  --red-ink: #f4f3ef;
+  --blue: #1b4b8f;
+  --ochre: #d99b23;
+
+  --rule: var(--ink);
+  --rule-soft: rgba(11, 11, 11, 0.28);
+  --rule-hair: rgba(11, 11, 11, 0.13);
+
+  /* Constructivism's hard offset shadow: a printed sheet on another sheet. */
+  --offset: 5px;
+  --offset-sm: 3px;
+
+  /* Layout: a wide outer measure with generous side padding, so the content column
+     is centred inside a page that still reads as a page. */
+  --maxw: 1440px;
+  --measure: 1080px;
+  --pad-x: clamp(18px, 5vw, 72px);
+  --nav-h: 58px;
+  --sec-gap: clamp(28px, 4vw, 54px);
+  --gut: 18px;
+  --gut-sm: 11px;
+
+  --font: "Helvetica Neue", Helvetica, "Inter", "Segoe UI", Arial,
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+          system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  --ease: cubic-bezier(0.22, 0.72, 0.16, 1);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  /* A fluid measure: the reference's own formula, so the body scales with the
+     window instead of stepping at breakpoints. */
+  font-size: clamp(14px, 13.2px + 0.25vw, 16.5px);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+  font-feature-settings: "tnum" 1, "kern" 1;
+}
+
+#app { position: fixed; inset: 0; }
+
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.layer { position: absolute; inset: 0; pointer-events: none; }
+.layer > * { pointer-events: auto; }
+
+/* --------------------------------------------------------------------------
+   the typographic system
+   --------------------------------------------------------------------------
+   Four roles and nothing between them. A Swiss page has hierarchy because the
+   roles are far apart, not because there are many of them.
+   -------------------------------------------------------------------------- */
+
+/* 1. label — uppercase, wide-tracked, small. The workhorse. */
+.lbl {
+  font-size: clamp(10px, 0.3vw + 9px, 12px);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0;
+}
+.lbl.ink { color: var(--ink); }
+.lbl.red { color: var(--red); }
+
+/* 2. display — the biggest thing on the page, set tight and to the edge. */
+.display {
+  margin: 0;
+  font-size: clamp(2rem, 7.5vw, 4.6rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.88;
+  text-transform: uppercase;
+}
+.display.sm { font-size: clamp(1.4rem, 3.6vw, 2.2rem); letter-spacing: -0.02em; line-height: 0.96; }
+
+/* 3. body — flush left, ragged right, never justified. */
+.body {
+  margin: 0;
+  font-size: clamp(13.5px, 1vw + 10.5px, 16.5px);
+  line-height: 1.82;
+  color: var(--ink-2);
+  max-width: 70ch;
+}
+/* Emphasis as a red-tinted highlight rather than a heavier weight: it survives a
+   glance, and it is the reference's own device. */
+.body strong {
+  font-weight: 600;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--red) 14%, transparent);
+  padding: 0 3px;
+}
+.body + .body { margin-top: 1.15em; }
+
+/* 4. data — tabular numerals, monospaced alignment. */
+.data {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+
+/* The index numeral: a Constructivist device used as real navigation aid. */
+.index-no {
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* A section head: an ink rule across the top, a red index number, the title, and a
+   right-aligned note. The rule is the structure; nothing else is needed. */
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--ink);
+  padding-top: 13px;
+  margin: 0 0 clamp(16px, 2.4vw, 30px);
+}
+.head h3 {
+  margin: 0;
+  font-size: clamp(15px, 1.1vw + 11px, 23px);
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.14;
+}
+.head::after {
+  content: attr(data-note);
+  margin-left: auto;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.head h3 .num {
+  color: var(--red);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin-right: 10px;
+  vertical-align: 0.28em;
+}
+
+/* --------------------------------------------------------------------------
+   boot
+   -------------------------------------------------------------------------- */
+
+#boot {
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  z-index: 40;
+  transition: opacity 0.35s var(--ease);
+}
+#boot.gone { opacity: 0; pointer-events: none; }
+
+.boot-card {
+  width: min(92vw, 620px);
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  box-shadow: var(--offset) var(--offset) 0 var(--ink);
+  padding: 26px 26px 22px;
+}
+.boot-title {
+  margin: 0;
+  font-size: clamp(2.6rem, 11vw, 5.4rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.82;
+  text-transform: uppercase;
+}
+.boot-rule { display: flex; align-items: center; gap: 10px; margin: 14px 0 4px; }
+.boot-rule i { width: 46px; height: 8px; background: var(--red); display: block; }
+.boot-rule span { flex: 1; height: 2px; background: var(--ink); }
+.boot-sub { margin: 10px 0 20px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+.boot-meter { height: 8px; border: 1px solid var(--ink); background: var(--paper); }
+.boot-fill { height: 100%; width: 0%; background: var(--red); transition: width 0.3s var(--ease); }
+.boot-status {
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-3);
+  min-height: 1.2em;
+}
+.boot-status.error { color: var(--red); }
+
+/* --------------------------------------------------------------------------
+   HUD — a rule line at the top, a swatch row at the bottom
+   -------------------------------------------------------------------------- */
+
+#hud { display: flex; flex-direction: column; justify-content: space-between; }
+
+.hud-top { padding: 0; }
+
+.hud-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+  flex-wrap: wrap;
+}
+
+.hud-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  padding: 6px 14px;
+  border-right: 1px solid var(--rule-soft);
+  min-width: 0;
+}
+.hud-cell:first-child { padding-left: 16px; }
+.hud-cell.grow { flex: 1 1 180px; }
+.hud-cell.right { margin-left: auto; border-right: 0; border-left: 1px solid var(--rule-soft); }
+
+.hud-album { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); }
+.hud-level {
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-moves {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.hud-moves.low { color: var(--ochre); }
+.hud-moves.none { color: var(--red); }
+
+.hud-progress { display: flex; align-items: center; gap: 8px; }
+.hud-track { width: 62px; height: 8px; border: 1px solid var(--ink); position: relative; }
+.hud-track i { position: absolute; inset: 0 auto 0 0; background: var(--ink); width: 0%; transition: width 0.3s var(--ease); }
+.hud-pct { font-family: var(--mono); font-size: 0.76rem; font-variant-numeric: tabular-nums; }
+
+.hud-goal { display: flex; align-items: center; gap: 8px; }
+.goal-sw {
+  width: 26px; height: 26px; flex: none;
+  border: 1px solid var(--ink);
+  display: grid; place-items: center;
+  font-size: 0.8rem; color: rgba(0, 0, 0, 0.55);
+}
+
+.hud-actions { display: flex; }
+.hud-actions .btn { border: 0; border-left: 1px solid var(--rule-soft); padding: 0 13px; height: 100%; }
+.hud-actions .btn:first-child { border-left: 1px solid var(--rule-soft); }
+
+/* --------------------------------------------------------------------------
+   buttons — a rectangle that inverts
+   -------------------------------------------------------------------------- */
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  border-radius: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.12s var(--ease), color 0.12s var(--ease);
+  white-space: nowrap;
+}
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn:hover svg { stroke: var(--paper); }
+.btn:active { transform: translate(1px, 1px); }
+.btn:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+.btn[disabled] { opacity: 0.34; cursor: not-allowed; }
+.btn[disabled]:hover { background: var(--paper); color: var(--ink); }
+.btn[disabled]:hover svg { stroke: var(--ink); }
+
+.btn.primary { background: var(--red); border-color: var(--red); color: var(--red-ink); }
+.btn.primary:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.btn.primary:hover svg { stroke: var(--paper); }
+
+.btn.ghost { border-color: transparent; }
+.btn.ghost:hover { background: var(--paper); color: var(--red); border-color: transparent; }
+.btn.ghost:hover svg { stroke: var(--red); }
+
+.btn.icon { padding: 9px 11px; }
+.btn.flat { border-color: var(--rule-soft); }
+.btn svg { stroke: var(--ink); flex: none; }
+
+/* --------------------------------------------------------------------------
+   the palette dock
+   --------------------------------------------------------------------------
+   Each pigment is a printed ink patch with its index number, a glyph for the
+   colour-blind layer, and the count of tiles that still need it. A row of
+   numbered patches is what a printer's swatch book looks like, and it is also
+   the clearest possible arrangement of five choices.
+   -------------------------------------------------------------------------- */
+
+.hud-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-top: 2px solid var(--ink);
+  background: var(--paper);
+  padding-bottom: 4px;
+}
+
+.dock-strip {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--rule-soft);
+  min-height: 30px;
+}
+.dock-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 16px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  transition: color 0.15s var(--ease);
+}
+.dock-hint.warn { color: var(--ochre); }
+.dock-hint.bad { color: var(--red); }
+.dock-hint.good { color: var(--blue); }
+
+.mix-preview {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  padding: 5px 16px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.mix-preview .sw {
+  width: 17px; height: 17px; flex: none;
+  border: 1px solid var(--ink);
+}
+.mix-preview .op { color: var(--ink-3); }
+
+/* A row of discrete swatch tiles, left-aligned, not a row of banners.
+ *
+ * The previous version let each chip stretch to fill the width — three pigments
+ * across a 1440px window gave three 480px buttons, with the swatch you are supposed
+ * to identify by colour reduced to a 36px strip along the top of each. A swatch book
+ * is a row of tiles; stretching them destroys the only thing the control is for.
+ *
+ * The armed state is one red bar, a red border, a lift and a hard shadow. An
+ * earlier version inked the whole chip black, which used a great deal of ink to
+ * say one thing and made the swatch sit on a black field it was never designed
+ * against. */
+.dock {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  padding: 8px 14px 11px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.chip {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 98px;
+  position: relative;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.14s var(--ease), box-shadow 0.14s var(--ease), border-color 0.14s var(--ease);
+}
+.chip:hover { transform: translateY(-2px); box-shadow: 0 3px 0 var(--rule-soft); }
+.chip:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+.chip[aria-pressed="true"] {
+  border-color: var(--red);
+  transform: translateY(-5px);
+  box-shadow: var(--offset-sm) var(--offset-sm) 0 var(--red);
+}
+.chip[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  top: -1px;
+  height: 5px;
+  background: var(--red);
+}
+.chip[disabled] { opacity: 0.28; cursor: not-allowed; transform: none; }
+.chip[disabled]:hover { box-shadow: none; }
+
+.chip-swatch {
+  height: 48px;
+  border-bottom: 1px solid var(--ink);
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+.chip-body {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 5px;
+  padding: 6px 7px 7px;
+}
+.chip-no {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+.chip-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip-count {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.chip.hot .chip-count { color: var(--red); font-weight: 700; }
+.chip[aria-pressed="true"] .chip-no { color: var(--red); }
+
+/* The armed readout in the top rule line, so the choice is visible without
+   looking away from the board. */
+.armed { display: flex; align-items: center; gap: 8px; }
+.armed .sw {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border: 1px solid var(--ink);
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+.armed .sw.empty { background: var(--paper-2); }
+.armed .nm { font-size: 0.78rem; font-weight: 700; }
+.armed .nm.dim { color: var(--ink-3); font-weight: 600; }
+
+/* --------------------------------------------------------------------------
+   screens
+   -------------------------------------------------------------------------- */
+
+/* A single column of content, centred and measure-limited, sitting on the page.
+ *
+ * There is no split layout and no long vertical panel. Content is held to a
+ * comfortable measure in the middle of the screen, which leaves the margins free —
+ * and the margins are where the board lives, as a background rather than as a
+ * column competing with the text. A functional page is a page of type; the board
+ * behind it is scenery and is dimmed to say so. */
+#screens {
+  display: grid;
+  place-items: start center;
+  overflow: auto;
+  background: transparent;
+}
+
+.screen {
+  width: min(100%, var(--measure));
+  min-height: 100%;
+  background: var(--paper);
+  border-left: 1px solid var(--rule-hair);
+  border-right: 1px solid var(--rule-hair);
+  padding: clamp(16px, 2.6vw, 34px) clamp(18px, 3.6vw, 52px) clamp(20px, 3vw, 40px);
+  animation: wipe 0.24s var(--ease) both;
+}
+
+/* The board as scenery: visible in the margins, clearly not the subject. A washed
+   print behind type is a Constructivist device, and it is also the only honest way
+   to keep a live board on screen without letting it take over a settings page. */
+#scene { transition: opacity 0.4s var(--ease); }
+body[data-canvas='ambient'] #scene { opacity: 0.34; }
+body[data-canvas='hero'] #scene,
+body[data-canvas='focus'] #scene { opacity: 1; }
+
+/* --- the nav: numbered links with a rule that draws in -----------------------
+   The reference's device, and a better one than a boxed segmented control: the
+   current page is marked by a rule that draws in under it rather than by inverting
+   a whole cell, so the bar stays light and the numbers stay readable. */
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 34px);
+  height: var(--nav-h);
+  border-bottom: 1px solid var(--ink);
+  margin-bottom: var(--sec-gap);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pager::-webkit-scrollbar { display: none; }
+
+.pager button {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--ink-3);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 0;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  white-space: nowrap;
+  transition: color 0.16s var(--ease);
+}
+.pager button .n {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+.pager button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.24s var(--ease);
+}
+.pager button:hover { color: var(--ink); }
+.pager button:hover::after { transform: scaleX(0.34); }
+.pager button[aria-current="true"] { color: var(--ink); }
+.pager button[aria-current="true"]::after { transform: scaleX(1); }
+.pager button[aria-current="true"] .n { color: var(--red); }
+.pager button:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+
+.pager-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: var(--sec-gap);
+  padding-top: 14px;
+  border-top: 2px solid var(--ink);
+}
+.pager-foot .where {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-right: auto;
+}
+
+/* A landing page is one screenful. Nothing on it scrolls. */
+.screen.page { display: flex; flex-direction: column; min-height: 100%; }
+.screen.page .page-body { flex: 1; }
+@keyframes wipe {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* A modal floats over a live board: it must read as a printed sheet on top. */
+.sheet {
+  width: min(94vw, 760px);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: var(--offset) var(--offset) 0 var(--ink);
+  padding: clamp(18px, 3vw, 30px);
+  animation: sheet-in 0.22s var(--ease) both;
+}
+.sheet.narrow { width: min(94vw, 560px); }
+@keyframes sheet-in {
+  from { opacity: 0; transform: translate(-6px, -6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The page masthead: a rule, an eyebrow, a display line, and a red block. */
+.masthead { border-top: 3px solid var(--ink); padding-top: 14px; margin-bottom: 26px; }
+.masthead .display { margin: 6px 0 0; }
+.masthead .body { margin-top: 14px; }
+
+.redblock {
+  display: block;
+  height: 14px;
+  background: var(--red);
+  margin: 0 0 14px;
+}
+.redblock.wide { height: 22px; }
+
+/* chips row */
+.chips { display: flex; gap: 0; flex-wrap: wrap; border: 1px solid var(--ink); margin-top: 16px; }
+.pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 7px 11px;
+  border-right: 1px solid var(--rule-soft);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.pill:last-child { border-right: 0; }
+.pill.on { background: var(--ink); color: var(--paper); }
+
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+
+/* --------------------------------------------------------------------------
+   album plates
+   -------------------------------------------------------------------------- */
+
+.plate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 20px;
+}
+
+.plate {
+  position: relative;
+  text-align: left;
+  appearance: none;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.13s var(--ease), box-shadow 0.13s var(--ease);
+}
+.plate:hover { transform: translate(-2px, -2px); box-shadow: var(--offset) var(--offset) 0 var(--ink); }
+.plate:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+
+.plate-strip { display: flex; height: 66px; border-bottom: 1px solid var(--ink); }
+.plate-strip span { flex: 1; border-right: 1px solid rgba(0, 0, 0, 0.28); }
+.plate-strip span:last-child { border-right: 0; }
+
+.plate-body { padding: 13px 14px 15px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.plate-top { display: flex; align-items: baseline; gap: 10px; }
+.plate-name { font-size: 1.02rem; font-weight: 800; letter-spacing: -0.015em; margin: 0; }
+.plate-zh { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--ink-3); }
+.plate-blurb { font-size: 0.78rem; line-height: 1.42; color: var(--ink-2); margin: 0; flex: 1; }
+.plate-foot { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--rule-hair); padding-top: 9px; }
+
+.meter { height: 6px; border: 1px solid var(--ink); flex: 1; position: relative; }
+.meter i { position: absolute; inset: 0 auto 0 0; background: var(--red); }
+
+/* --------------------------------------------------------------------------
+   level rows — a table, because it is a table
+   -------------------------------------------------------------------------- */
+
+.level-table { border-top: 2px solid var(--ink); }
+.level-row {
+  display: grid;
+  grid-template-columns: 46px 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 0;
+  border-bottom: 1px solid var(--rule-hair);
+  border-radius: 0;
+  padding: 11px 4px;
+  cursor: pointer;
+  transition: background 0.1s var(--ease);
+}
+.level-row:hover { background: var(--paper-2); }
+.level-row:hover .level-no { color: var(--red); }
+.level-row:focus-visible { outline: 3px solid var(--red); outline-offset: -3px; }
+.level-row[data-locked="true"] { opacity: 0.4; cursor: not-allowed; }
+.level-row[data-locked="true"]:hover { background: var(--paper); }
+.level-row[data-settled="true"] .level-no { color: var(--red); }
+
+.level-no {
+  font-family: var(--mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  transition: color 0.1s var(--ease);
+}
+.level-name { font-size: 0.9rem; font-weight: 700; letter-spacing: -0.01em; }
+.level-name small { display: block; font-size: 0.7rem; font-weight: 600; color: var(--ink-3); letter-spacing: 0.06em; }
+
+.level-tags { display: flex; gap: 0; border: 1px solid var(--rule-soft); }
+.tag {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-right: 1px solid var(--rule-soft);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.tag:last-child { border-right: 0; }
+.tag.red { background: var(--red); color: var(--red-ink); border-color: var(--red); }
+.tag.ink { background: var(--ink); color: var(--paper); }
+
+.level-meta { display: flex; align-items: center; gap: 10px; }
+
+/* difficulty as four printed ticks, readable before the word is read */
+.ticks { display: inline-flex; gap: 2px; align-items: center; }
+.ticks i { width: 4px; height: 12px; background: var(--rule-hair); display: block; }
+.ticks i.on { background: var(--ink); }
+.ticks.severe i.on:last-child { background: var(--red); }
+
+/* --------------------------------------------------------------------------
+   settings / how-to rows
+   -------------------------------------------------------------------------- */
+
+.rows { border-top: 2px solid var(--ink); }
+.row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--rule-hair);
+}
+.row .label { flex: 1; min-width: 0; }
+.row .label span { font-size: 0.86rem; font-weight: 650; }
+.row .label small { display: block; font-size: 0.75rem; line-height: 1.4; color: var(--ink-3); margin-top: 3px; max-width: 52ch; }
+.row .label .idx {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--red);
+  margin-right: 8px;
+}
+
+.seg { display: inline-flex; border: 1px solid var(--ink); }
+.seg button {
+  appearance: none; border: 0; border-right: 1px solid var(--rule-soft);
+  background: var(--paper); color: var(--ink);
+  font: inherit; font-size: 0.66rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 12px; cursor: pointer; white-space: nowrap;
+}
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button:focus-visible { outline: 3px solid var(--red); outline-offset: -3px; }
+
+.switch {
+  appearance: none;
+  width: 46px; height: 24px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  position: relative; cursor: pointer; border-radius: 0; flex: none;
+}
+.switch::after {
+  content: "";
+  position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px;
+  background: var(--ink);
+  transition: transform 0.14s var(--ease), background 0.14s var(--ease);
+}
+.switch[aria-checked="true"] { background: var(--red); border-color: var(--red); }
+.switch[aria-checked="true"]::after { transform: translateX(22px); background: var(--red-ink); }
+.switch:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 138px;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; background: var(--paper-3); border: 1px solid var(--ink); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px; height: 22px;
+  background: var(--ink);
+  border: 0; border-radius: 0;
+  margin-top: -9px;
+}
+input[type="range"]::-moz-range-track { height: 6px; background: var(--paper-3); border: 1px solid var(--ink); }
+input[type="range"]::-moz-range-thumb { width: 10px; height: 22px; background: var(--ink); border: 0; border-radius: 0; }
+input[type="range"]:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+
+kbd {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 7px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.note {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--ink);
+  border-left: 8px solid var(--red);
+  background: var(--paper-2);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.note strong { color: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   the mixing lab
+   -------------------------------------------------------------------------- */
+
+.lab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 26px; }
+@media (max-width: 760px) { .lab { grid-template-columns: 1fr; } }
+
+.lab-pots { border-top: 2px solid var(--ink); }
+.lab-pot {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  padding: 9px 2px;
+  border: 0; border-bottom: 1px solid var(--rule-hair);
+  border-radius: 0; background: var(--paper);
+  font: inherit; color: var(--ink); cursor: pointer;
+  transition: background 0.1s var(--ease);
+}
+.lab-pot:hover { background: var(--paper-2); }
+.lab-pot:focus-visible { outline: 3px solid var(--red); outline-offset: -3px; }
+.lab-pot .no { font-family: var(--mono); font-size: 0.66rem; font-weight: 700; color: var(--ink-3); }
+.lab-pot .dot { width: 30px; height: 30px; border: 1px solid var(--ink); flex: none; }
+.lab-pot .nm { flex: 1; font-size: 0.86rem; font-weight: 650; }
+.lab-pot .nm small { display: block; font-size: 0.68rem; font-weight: 600; color: var(--ink-3); letter-spacing: 0.08em; }
+.lab-pot .cnt { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-3); }
+
+.lab-result {
+  border: 1px solid var(--ink);
+  height: 150px;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  color: rgba(0, 0, 0, 0.55);
+  transition: background 0.25s var(--ease);
+}
+.lab-formula { font-family: var(--mono); font-size: 0.74rem; line-height: 1.5; color: var(--ink-2); margin-top: 10px; }
+.lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 4px; }
+.lab-cell {
+  height: 46px;
+  display: grid; place-items: center;
+  font-size: 0.78rem;
+  border: 1px solid var(--ink);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   credits
+   -------------------------------------------------------------------------- */
+
+.credit-list { margin: 0; padding: 0; list-style: none; border-top: 2px solid var(--ink); }
+.credit-list li {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 16px;
+  padding: 11px 2px;
+  border-bottom: 1px solid var(--rule-hair);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.credit-list .what {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--red);
+  padding-top: 2px;
+}
+.credit-list a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.credit-list a:hover { color: var(--red); }
+@media (max-width: 560px) { .credit-list li { grid-template-columns: 1fr; gap: 3px; } }
+
+/* --------------------------------------------------------------------------
+   toasts — a printed slip, not a bubble
+   -------------------------------------------------------------------------- */
+
+.toasts {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 20;
+}
+.toast {
+  background: var(--ink);
+  color: var(--paper);
+  border: 0;
+  border-radius: 0;
+  padding: 9px 16px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-top: 1px;
+  animation: slip 0.18s var(--ease) both;
+}
+.toast.bad { background: var(--red); color: var(--red-ink); }
+.toast.good { background: var(--blue); color: var(--paper); }
+.toast.warn { background: var(--ochre); color: var(--ink); }
+.toast.out { animation: slip-out 0.2s var(--ease) both; }
+@keyframes slip { from { transform: translateX(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes slip-out { to { transform: translateX(-14px); opacity: 0; } }
+
+/* --------------------------------------------------------------------------
+   solution steps
+   -------------------------------------------------------------------------- */
+
+.solve-steps { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ink); }
+.solve-steps li {
+  display: grid;
+  grid-template-columns: 30px 22px 12px 22px 12px 22px 1fr;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 2px;
+  border-bottom: 1px solid var(--rule-hair);
+  font-size: 0.8rem;
+}
+.solve-steps li.now { background: var(--paper-2); }
+.step-sw { width: 22px; height: 22px; border: 1px solid var(--ink); }
+.step-sw.from { opacity: 0.42; }
+
+/* --------------------------------------------------------------------------
+   motion and small screens
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.04s !important;
+  }
+}
+
+@media (max-width: 620px) {
+  :root { --offset: 3px; --gut: 12px; }
+  .hud-cell { padding: 7px 10px; }
+  .hud-moves { font-size: 1.25rem; }
+  .chip { min-width: 72px; flex-basis: 72px; }
+  .chip-swatch { height: 32px; }
+  .chip-name { font-size: 0.66rem; }
+  .mix-preview { display: none; }
+  .level-row { grid-template-columns: 34px 1fr auto; gap: 9px; }
+  .level-tags { display: none; }
+  .toasts { bottom: 0; }
+}
+
+/* ==========================================================================
+   The landing page
+   --------------------------------------------------------------------------
+   The title screen is the one page with room to argue, so it argues. It is a
+   sequence of numbered sections in the same grid as everything else: the claim
+   about mixing, the four grids, the six print processes, and the size of the
+   thing. Each section is a live figure computed from the same data the game
+   runs on — the mixing demo is the pigment model, the palette bars are the
+   palettes, the counts are the level file. Nothing on this page is a
+   screenshot.
+   ========================================================================== */
+
+.home-sec { margin-top: 22px; }
+
+/* A palette shown as one continuous sweep rather than a row of blocks. The
+   interpolation is OKLab, which is the same space the board animates colours
+   through, so the bar is not decoration: it is the album's colour volume, and
+   the ticks on it are the mixtures the board can actually reach. */
+.sweep {
+  height: 58px;
+  border: 1px solid var(--ink);
+  position: relative;
+  overflow: hidden;
+}
+.sweep.flat { height: 34px; }
+.sweep .tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.42);
+}
+.sweep .tick.light { background: rgba(255, 255, 255, 0.42); }
+
+.sweep-row { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; }
+.sweep-row + .sweep-row { margin-top: 9px; }
+.sweep-name { font-size: 0.78rem; font-weight: 700; letter-spacing: -0.005em; }
+.sweep-name small { display: block; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.09em; color: var(--ink-3); }
+.sweep-meta { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3); text-align: right; white-space: nowrap; }
+
+/* the mixing demonstration: three worked examples, computed from the model */
+.mix-demo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border: 1px solid var(--ink); }
+.mix-cell { border-right: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft); }
+.mix-cell:nth-child(2n) { border-right: 0; }
+.mix-cell:nth-last-child(-n + 2) { border-bottom: 0; }
+.mix-bar { height: 76px; }
+.mix-foot { padding: 7px 9px 9px; border-top: 1px solid var(--ink); }
+.mix-foot .eq { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-2); }
+.mix-foot .res { font-size: 0.76rem; font-weight: 700; margin-top: 2px; }
+
+/* the four grids */
+.grid-demo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border: 1px solid var(--ink); }
+.grid-cell { padding: 13px 12px 14px; border-right: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft); }
+.grid-cell:nth-child(2n) { border-right: 0; }
+.grid-cell:nth-last-child(-n + 2) { border-bottom: 0; }
+.grid-cell svg { display: block; stroke: var(--ink); fill: none; stroke-width: 1.5; }
+.grid-cell .nm { margin-top: 9px; font-size: 0.78rem; font-weight: 700; }
+.grid-cell .nm small { display: block; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.09em; color: var(--ink-3); }
+.grid-cell .dsc { margin-top: 6px; font-size: 0.72rem; line-height: 1.4; color: var(--ink-2); }
+.grid-cell .deg { margin-top: 8px; font-family: var(--mono); font-size: 0.66rem; color: var(--red); }
+
+/* the numbers */
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--ink); }
+.stat { padding: 12px 12px 13px; border-right: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft); }
+.stat:nth-child(3n) { border-right: 0; }
+.stat:nth-last-child(-n + 3) { border-bottom: 0; }
+.stat .n { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 1.7rem; font-weight: 700; letter-spacing: -0.05em; line-height: 1; }
+.stat .n.red { color: var(--red); }
+.stat .k { margin-top: 6px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+.home-foot {
+  margin-top: 40px;
+  padding-top: 14px;
+  border-top: 2px solid var(--ink);
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.home-foot .fine { font-size: 0.7rem; color: var(--ink-3); max-width: 46ch; }
+
+@media (max-width: 620px) {
+  .sweep { height: 44px; }
+  .mix-bar { height: 54px; }
+  .stat .n { font-size: 1.35rem; }
+}
+
+/* The album plate wears the sweep as its masthead. */
+.plate-strip-sweep {
+  height: 68px;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+}
+
+
+/* ==========================================================================
+   The landing page, page one
+   --------------------------------------------------------------------------
+   The first view is a header band with the board below it — a hero, not a
+   column. It is the only place the board is allowed to be the subject; every
+   other page in the game, and every other page of this one, treats it as
+   background.
+   ========================================================================== */
+
+.screen.hero { background: transparent; border-color: transparent; }
+.screen.hero .hero-head {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: var(--offset) var(--offset) 0 var(--ink);
+  padding: clamp(18px, 3vw, 32px);
+}
+.screen.hero .hero-spacer { flex: 1; min-height: 26px; }

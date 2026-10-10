@@ -1,0 +1,16 @@
+# Generator and server logs
+tools/.generate.log
+tools/.serve.log
+
+# Asset download cache
+tools/.cache/
+
+# Optional webfonts. fonts.css is committed (with no rules in it) so the page always
+# has a stylesheet to load; the woff2 files are fetched by `npm run assets` and are
+# not part of the source.
+assets/fonts/*.woff2
+assets/fonts/*.woff
+
+# OS noise
+.DS_Store
+Thumbs.db

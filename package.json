@@ -1,0 +1,22 @@
+{
+  "name": "overflow-pigment-puzzle",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OVERFLOW — a pigment-mixing puzzle rendered with three.js",
+  "scripts": {
+    "serve": "node tools/serve.mjs",
+    "serve:prefix": "node tools/serve.mjs --prefix=overflow-pigment-puzzle",
+    "vendor": "node tools/vendor-three.mjs",
+    "vendor:check": "node tools/vendor-three.mjs --check",
+    "assets": "node tools/fetch-assets.mjs",
+    "levels": "node tools/generate-levels.mjs",
+    "levels:dry": "node tools/generate-levels.mjs --dry",
+    "validate": "node tools/validate-levels.mjs",
+    "validate:grid": "node tools/validate-grid.mjs",
+    "validate:color": "node tools/validate-color.mjs",
+    "smoke": "node tools/smoke.mjs",
+    "check": "node tools/validate-grid.mjs && node tools/validate-color.mjs && node tools/validate-levels.mjs && node tools/smoke.mjs",
+    "clean": "node -e \"require('fs').rmSync('tools/.cache',{recursive:true,force:true})\" && echo cache cleared"
+  }
+}

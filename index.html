@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OVERFLOW — a pigment-mixing puzzle</title>
+<meta name="description" content="A pigment-mixing puzzle. Spread colour across square, hexagonal, diamond and triangular boards, and mix blue with yellow to get green — because the mixing is real.">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+<!-- Always present, but empty until `npm run assets` fills it in. Linked rather
+     than conditionally injected so a fresh clone never 404s on load. -->
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<!-- Start the two largest downloads before the module graph is discovered. three's
+     build is split, so three.core.js is a separate request that would otherwise
+     only be discovered after three.module.js parses. -->
+<link rel="modulepreload" href="./vendor/three/three.module.js">
+<link rel="modulepreload" href="./vendor/three/three.core.js">
+<script>
+/* Collect anything that goes wrong before the module graph has even parsed.
+   A module that fails to load reports nothing useful to the user, and the boot
+   card would sit at "loading…" forever with the reason only in the console. This
+   records the first few failures on `window.__errors` and, if boot has not
+   finished, says so on the card. Also what the browser smoke test reads. */
+window.__errors = [];
+(function () {
+  function record(kind, message, detail) {
+    window.__errors.push({ kind: kind, message: String(message), detail: detail ? String(detail) : null });
+    var status = document.getElementById('boot-status');
+    if (status && window.__errors.length === 1) {
+      status.textContent = 'failed to start: ' + message;
+      status.classList.add('error');
+    }
+  }
+  window.addEventListener('error', function (e) {
+    if (e.target && e.target !== window && e.target.tagName) {
+      record('resource', 'failed to load ' + e.target.tagName.toLowerCase() + ': ' + (e.target.src || e.target.href), null);
+      return;
+    }
+    record('error', e.message, e.error && e.error.stack);
+  }, true);
+  window.addEventListener('unhandledrejection', function (e) {
+    record('rejection', (e.reason && e.reason.message) || e.reason, e.reason && e.reason.stack);
+  });
+  /* three reports shader compile failures through console.error and then quietly
+     skips the object, so a broken material shows up as "a thing is missing" with no
+     error anywhere the page can see. Capture the console too. */
+  ['error', 'warn'].forEach(function (level) {
+    var original = console[level].bind(console);
+    console[level] = function () {
+      var args = Array.prototype.slice.call(arguments);
+      var text = args.map(function (a) { return typeof a === 'string' ? a : (a && a.message) || String(a); }).join(' ');
+      window.__errors.push({ kind: 'console.' + level, message: text.slice(0, 4000), detail: null });
+      return original.apply(null, args);
+    };
+  });
+})();
+</script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/three/addons/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene" aria-label="Puzzle board"></canvas>
+
+  <!-- heads-up display: move budget, progress, palette -->
+  <div id="hud" class="layer" aria-live="polite"></div>
+
+  <!-- menus, cards, overlays -->
+  <div id="screens" class="layer"></div>
+
+  <!-- first-paint / asset loading -->
+  <div id="boot" class="layer">
+    <div class="boot-card">
+      <h1 class="boot-title">Overflow</h1>
+      <div class="boot-rule"><i></i><span></span></div>
+      <p class="boot-sub">a pigment-mixing puzzle · 颜料混合解谜</p>
+      <div class="boot-meter"><div class="boot-fill" id="boot-fill"></div></div>
+      <p class="boot-status" id="boot-status">loading…</p>
+    </div>
+  </div>
+
+  <noscript>
+    <div class="layer"><div class="boot-card"><h1 class="boot-title">Overflow</h1>
+    <div class="boot-rule"><i></i><span></span></div>
+    <p class="boot-sub">This game needs JavaScript and WebGL. / 本游戏需要 JavaScript 与 WebGL。</p></div></div>
+  </noscript>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
