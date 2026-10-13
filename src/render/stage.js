@@ -460,7 +460,17 @@ export class Stage {
    * Re-frames the board if one is loaded.
    */
   setViewportInset(inset) {
-    const next = { x0: 0, x1: 1, y0: 0, y1: 1, ...inset };
+    // Sanitised, not spread: the caller derives the top/bottom fractions from the
+    // live window height, and a viewport that reports 0 (a hidden pane, a window
+    // mid-collapse, an iframe before layout) turns them into Infinity/NaN — which
+    // then flows into the framing and poisons the camera *permanently*, because
+    // every later frame re-applies the NaN view offset. A degenerate request falls
+    // back to the full viewport instead.
+    const next = { x0: 0, x1: 1, y0: 0, y1: 1 };
+    for (const k of ['x0', 'x1', 'y0', 'y1']) {
+      const v = inset?.[k];
+      if (Number.isFinite(v)) next[k] = Math.min(1, Math.max(0, v));
+    }
     const same = ['x0', 'x1', 'y0', 'y1'].every((k) => Math.abs(next[k] - this._inset[k]) < 1e-3);
     this._inset = next;
     if (!same && this._lastBoard) {
@@ -573,6 +583,16 @@ export class Stage {
     }
     this.tiltLimit = limit;
 
+    // A fit that came out non-finite must not be committed: it would take the whole
+    // scene with it (nothing draws under a NaN camera), and because the framed state
+    // is what `resetView` and every resize re-apply, the board would never come back.
+    // Keep the previous good framing instead.
+    if (!Number.isFinite(dist) || !Number.isFinite(shift.x) || !Number.isFinite(shift.y)) {
+      if (this._camTarget) { this._placeCamera(this._camTarget.dist, this._camTarget.el, this._camTarget.az); }
+      this._applyViewOffset(this._ndcShift);
+      return;
+    }
+
     this._camTarget = { dist, el, az };
     this._ndcShift = shift;
     this._placeCamera(dist, el, az);
@@ -605,12 +625,17 @@ export class Stage {
 
   /** Shift the frustum so the board is centred, without turning the camera. */
   _applyViewOffset(shift) {
-    if (!shift || (Math.abs(shift.x) < 1e-4 && Math.abs(shift.y) < 1e-4)) {
+    // Non-finite is treated as "no shift", never passed through: setViewOffset with a
+    // NaN builds a NaN projection matrix, and this runs every frame from `resize`,
+    // so one bad value would blank the scene for the rest of the session.
+    if (!shift || !Number.isFinite(shift.x) || !Number.isFinite(shift.y) ||
+        (Math.abs(shift.x) < 1e-4 && Math.abs(shift.y) < 1e-4)) {
       this.camera.clearViewOffset();
       return;
     }
     const w = this.canvas.clientWidth || window.innerWidth;
     const h = this.canvas.clientHeight || window.innerHeight;
+    if (!(w > 0) || !(h > 0)) { this.camera.clearViewOffset(); return; }
     this.camera.setViewOffset(w, h, (shift.x * w) / 2, (shift.y * h) / 2, w, h);
   }
 
@@ -643,6 +668,10 @@ export class Stage {
   resize() {
     const w = this.canvas.clientWidth || window.innerWidth;
     const h = this.canvas.clientHeight || window.innerHeight;
+    // A zero-sized viewport is a real state (hidden pane, window collapsing to the
+    // taskbar, iframe before layout) and dividing by it poisons `aspect` with
+    // Infinity/NaN. Ignore the event; the next real resize fixes everything.
+    if (!(w > 0) || !(h > 0)) return;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this._applyViewOffset(this._ndcShift);

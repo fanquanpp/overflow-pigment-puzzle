@@ -21,7 +21,6 @@ const KEY_ACTIONS = {
   h: 'hint', H: 'hint',
   escape: 'pause', Escape: 'pause',
   Enter: 'confirm', ' ': 'confirm',
-  ArrowLeft: 'nav:prev', ArrowRight: 'nav:next',
 };
 
 export function createInput(target, { onAction, onPointer, onHover } = {}) {
@@ -84,8 +83,8 @@ export function createInput(target, { onAction, onPointer, onHover } = {}) {
     if (tag === 'INPUT' || tag === 'TEXTAREA' || ev.target?.isContentEditable) return;
     const action = KEY_ACTIONS[ev.key] ?? KEY_ACTIONS[ev.key.toLowerCase?.()];
     if (!action) return;
-    // Space would otherwise scroll the page, and the arrow keys would move focus.
-    if (ev.key === ' ' || ev.key.startsWith('Arrow')) ev.preventDefault();
+    // Space would otherwise scroll the page.
+    if (ev.key === ' ') ev.preventDefault();
     onAction?.(action);
   });
 

@@ -426,6 +426,10 @@ async function main() {
   const input = createInput(canvas, {
     onAction: (action, point) => {
       audio.ensure();
+      // Enter/Space activate whatever sheet is open — "next board" on the result
+      // card, "resume" on pause. Handled before the modal guard below, because the
+      // whole point is to act *while* a modal is up.
+      if (action === 'confirm') { screens.confirmPrimary(); return; }
       if (screens.hasModal) return;
       if (screens.current) return; // menus own their own clicks
       if (action === 'tap') play.tap(point);

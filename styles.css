@@ -130,6 +130,18 @@ html, body {
 }
 .display.sm { font-size: clamp(1.4rem, 3.6vw, 2.2rem); letter-spacing: -0.02em; line-height: 0.96; }
 
+/* CJK is full-width by design: the glyphs are drawn to sit edge to edge, so the
+   negative tracking that tightens the Latin display face only makes them collide —
+   and at display weight it turns the numeral 一 into a bar that reads as a
+   strikethrough across the title. Zero the tracking (and give the taller glyphs a
+   little more leading) wherever a Chinese string can land. The page's `lang` is
+   set by setLocale, so this follows the language setting, not the album. */
+:lang(zh-Hans) .display,
+:lang(zh-Hans) .hud-level,
+:lang(zh-Hans) .plate-name,
+:lang(zh-Hans) .level-name { letter-spacing: 0; }
+:lang(zh-Hans) .display.sm { line-height: 1.06; }
+
 /* 3. body — flush left, ragged right, never justified. */
 .body {
   margin: 0;

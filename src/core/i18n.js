@@ -212,6 +212,7 @@ const EN = {
   'howto.key.drag': 'drag to orbit · wheel to zoom · right-drag to pan',
   'howto.key.recentre': 'return to the front',
   'howto.key.pause': 'pause',
+  'howto.key.confirm': 'confirm the sheet',
   'howto.back': 'Back',
 
   // ---- settings ----------------------------------------------------------
@@ -461,6 +462,7 @@ const ZH = {
   'howto.key.drag': '拖拽环绕 · 滚轮缩放 · 右键拖拽平移',
   'howto.key.recentre': '回到正面',
   'howto.key.pause': '暂停',
+  'howto.key.confirm': '确认弹窗',
   'howto.back': '返回',
 
   'settings.title': '设置',

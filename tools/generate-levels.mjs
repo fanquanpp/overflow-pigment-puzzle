@@ -450,6 +450,7 @@ function fmtLevel(entry, album, indent) {
   const L = [];
   L.push(`${indent}{`);
   L.push(`${indent}  id: ${JSON.stringify(level.id)},`);
+  L.push(`${indent}  album: ${JSON.stringify(album.id)},`);
   L.push(`${indent}  chapter: ${chapter}, variant: ${variant},`);
   L.push(`${indent}  name: ${JSON.stringify(name)}, nameZh: ${JSON.stringify(nameZh)},`);
   L.push(`${indent}  grid: ${JSON.stringify(level.grid)}, cols: ${level.cols}, rows: ${level.rows},`);

@@ -560,6 +560,7 @@ export function createScreens(root, ctx) {
         el('div', { class: 'row' }, [el('kbd', {}, 'R'), el('div', { class: 'label' }, [el('span', {}, t('howto.key.reset'))])]),
         el('div', { class: 'row' }, [el('kbd', {}, 'H'), el('div', { class: 'label' }, [el('span', {}, t('howto.key.hint'))])]),
         el('div', { class: 'row' }, [el('kbd', {}, 'Esc'), el('div', { class: 'label' }, [el('span', {}, t('howto.key.pause'))])]),
+        el('div', { class: 'row' }, [el('kbd', {}, '↵'), el('div', { class: 'label' }, [el('span', {}, t('howto.key.confirm'))])]),
       ]),
 
       el('div', { class: 'actions' }, [
@@ -914,6 +915,12 @@ export function createScreens(root, ctx) {
     get page() { return lastParams?.page ?? null; },
     get hasModal() { return modal !== null; },
     clearModal,
+    /** Activate the open sheet's primary action — what Enter/Space do. */
+    confirmPrimary() {
+      const btn = modal?.querySelector('.actions .btn.primary');
+      if (btn) { btn.click(); return true; }
+      return false;
+    },
     showResult: (info) => showModal(resultSheet(info)),
     showSolution: (info) => showModal(solutionSheet(info)),
     showPause: () => showModal(pauseSheet()),

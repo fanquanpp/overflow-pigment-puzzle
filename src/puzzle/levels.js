@@ -41,6 +41,7 @@ export const ALBUMS = [
     levels: [
       {
         id: "studio-p65",
+        album: "studio",
         chapter: 0, variant: 0,
         name: "Primer I", nameZh: "底涂·一",
         grid: "square", cols: 7, rows: 7,
@@ -59,6 +60,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p50",
+        album: "studio",
         chapter: 0, variant: 1,
         name: "Primer II", nameZh: "底涂·二",
         grid: "square", cols: 8, rows: 8,
@@ -77,6 +79,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p60",
+        album: "studio",
         chapter: 0, variant: 2,
         name: "Primer III", nameZh: "底涂·三",
         grid: "square", cols: 6, rows: 6,
@@ -101,6 +104,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p47",
+        album: "studio",
         chapter: 1, variant: 0,
         name: "Solvent I", nameZh: "溶剂·一",
         grid: "square", cols: 7, rows: 7,
@@ -119,6 +123,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p73",
+        album: "studio",
         chapter: 1, variant: 1,
         name: "Solvent II", nameZh: "溶剂·二",
         grid: "square", cols: 8, rows: 8,
@@ -137,6 +142,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p16",
+        album: "studio",
         chapter: 1, variant: 2,
         name: "Solvent III", nameZh: "溶剂·三",
         grid: "square", cols: 8, rows: 8,
@@ -159,6 +165,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p4",
+        album: "studio",
         chapter: 2, variant: 0,
         name: "Proof I", nameZh: "打样·一",
         grid: "square", cols: 9, rows: 9,
@@ -186,6 +193,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p32",
+        album: "studio",
         chapter: 2, variant: 1,
         name: "Proof II", nameZh: "打样·二",
         grid: "square", cols: 8, rows: 8,
@@ -208,6 +216,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p29",
+        album: "studio",
         chapter: 2, variant: 2,
         name: "Proof III", nameZh: "打样·三",
         grid: "square", cols: 9, rows: 9,
@@ -227,6 +236,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p85",
+        album: "studio",
         chapter: 3, variant: 0,
         name: "Register I", nameZh: "套准·一",
         grid: "square", cols: 9, rows: 9,
@@ -254,6 +264,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p77",
+        album: "studio",
         chapter: 3, variant: 1,
         name: "Register II", nameZh: "套准·二",
         grid: "square", cols: 7, rows: 7,
@@ -276,6 +287,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p71",
+        album: "studio",
         chapter: 3, variant: 2,
         name: "Register III", nameZh: "套准·三",
         grid: "square", cols: 7, rows: 7,
@@ -298,6 +310,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p43",
+        album: "studio",
         chapter: 4, variant: 0,
         name: "Overprint I", nameZh: "叠印·一",
         grid: "square", cols: 8, rows: 8,
@@ -320,6 +333,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p22",
+        album: "studio",
         chapter: 4, variant: 1,
         name: "Overprint II", nameZh: "叠印·二",
         grid: "square", cols: 7, rows: 7,
@@ -338,6 +352,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p82",
+        album: "studio",
         chapter: 4, variant: 2,
         name: "Overprint III", nameZh: "叠印·三",
         grid: "square", cols: 8, rows: 8,
@@ -360,6 +375,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p13",
+        album: "studio",
         chapter: 5, variant: 0,
         name: "Edition I", nameZh: "版次·一",
         grid: "square", cols: 9, rows: 9,
@@ -383,6 +399,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p70",
+        album: "studio",
         chapter: 5, variant: 1,
         name: "Edition II", nameZh: "版次·二",
         grid: "square", cols: 9, rows: 9,
@@ -410,6 +427,7 @@ export const ALBUMS = [
       },
       {
         id: "studio-p67",
+        album: "studio",
         chapter: 5, variant: 2,
         name: "Edition III", nameZh: "版次·三",
         grid: "square", cols: 8, rows: 8,
@@ -447,6 +465,7 @@ export const ALBUMS = [
     levels: [
       {
         id: "paper-p9",
+        album: "paper",
         chapter: 0, variant: 0,
         name: "Crease I", nameZh: "折痕·一",
         grid: "square", cols: 6, rows: 6,
@@ -465,6 +484,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p69",
+        album: "paper",
         chapter: 0, variant: 1,
         name: "Crease II", nameZh: "折痕·二",
         grid: "square", cols: 7, rows: 7,
@@ -487,6 +507,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p39",
+        album: "paper",
         chapter: 0, variant: 2,
         name: "Crease III", nameZh: "折痕·三",
         grid: "square", cols: 5, rows: 5,
@@ -507,6 +528,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p76",
+        album: "paper",
         chapter: 1, variant: 0,
         name: "Gusset I", nameZh: "褶角·一",
         grid: "square", cols: 8, rows: 8,
@@ -525,6 +547,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p14",
+        album: "paper",
         chapter: 1, variant: 1,
         name: "Gusset II", nameZh: "褶角·二",
         grid: "square", cols: 5, rows: 5,
@@ -547,6 +570,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p57",
+        album: "paper",
         chapter: 1, variant: 2,
         name: "Gusset III", nameZh: "褶角·三",
         grid: "square", cols: 7, rows: 7,
@@ -569,6 +593,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p87",
+        album: "paper",
         chapter: 2, variant: 0,
         name: "Valley Fold I", nameZh: "谷折·一",
         grid: "square", cols: 6, rows: 6,
@@ -590,6 +615,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p38",
+        album: "paper",
         chapter: 2, variant: 1,
         name: "Valley Fold II", nameZh: "谷折·二",
         grid: "square", cols: 7, rows: 7,
@@ -611,6 +637,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p70",
+        album: "paper",
         chapter: 2, variant: 2,
         name: "Valley Fold III", nameZh: "谷折·三",
         grid: "square", cols: 9, rows: 9,
@@ -638,6 +665,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p47",
+        album: "paper",
         chapter: 3, variant: 0,
         name: "Mountain Fold I", nameZh: "峰折·一",
         grid: "square", cols: 9, rows: 9,
@@ -665,6 +693,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p52",
+        album: "paper",
         chapter: 3, variant: 1,
         name: "Mountain Fold II", nameZh: "峰折·二",
         grid: "square", cols: 7, rows: 7,
@@ -686,6 +715,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p19",
+        album: "paper",
         chapter: 3, variant: 2,
         name: "Mountain Fold III", nameZh: "峰折·三",
         grid: "square", cols: 7, rows: 7,
@@ -707,6 +737,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p32",
+        album: "paper",
         chapter: 4, variant: 0,
         name: "Tessellation I", nameZh: "密铺·一",
         grid: "square", cols: 9, rows: 9,
@@ -726,6 +757,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p79",
+        album: "paper",
         chapter: 4, variant: 1,
         name: "Tessellation II", nameZh: "密铺·二",
         grid: "square", cols: 9, rows: 9,
@@ -749,6 +781,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p25",
+        album: "paper",
         chapter: 4, variant: 2,
         name: "Tessellation III", nameZh: "密铺·三",
         grid: "square", cols: 8, rows: 8,
@@ -767,6 +800,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p61",
+        album: "paper",
         chapter: 5, variant: 0,
         name: "Unfold I", nameZh: "展开·一",
         grid: "square", cols: 9, rows: 9,
@@ -786,6 +820,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p1",
+        album: "paper",
         chapter: 5, variant: 1,
         name: "Unfold II", nameZh: "展开·二",
         grid: "square", cols: 9, rows: 9,
@@ -809,6 +844,7 @@ export const ALBUMS = [
       },
       {
         id: "paper-p50",
+        album: "paper",
         chapter: 5, variant: 2,
         name: "Unfold III", nameZh: "展开·三",
         grid: "square", cols: 9, rows: 9,
@@ -844,6 +880,7 @@ export const ALBUMS = [
     levels: [
       {
         id: "garden-p33",
+        album: "garden",
         chapter: 0, variant: 0,
         name: "Seedbed I", nameZh: "苗床·一",
         grid: "square", cols: 7, rows: 7,
@@ -865,6 +902,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p18",
+        album: "garden",
         chapter: 0, variant: 1,
         name: "Seedbed II", nameZh: "苗床·二",
         grid: "square", cols: 7, rows: 7,
@@ -887,6 +925,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p66",
+        album: "garden",
         chapter: 0, variant: 2,
         name: "Seedbed III", nameZh: "苗床·三",
         grid: "square", cols: 5, rows: 5,
@@ -907,6 +946,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p44",
+        album: "garden",
         chapter: 1, variant: 0,
         name: "Trellis I", nameZh: "花架·一",
         grid: "square", cols: 6, rows: 6,
@@ -928,6 +968,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p89",
+        album: "garden",
         chapter: 1, variant: 1,
         name: "Trellis II", nameZh: "花架·二",
         grid: "square", cols: 6, rows: 6,
@@ -946,6 +987,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p34",
+        album: "garden",
         chapter: 1, variant: 2,
         name: "Trellis III", nameZh: "花架·三",
         grid: "square", cols: 9, rows: 9,
@@ -965,6 +1007,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p8",
+        album: "garden",
         chapter: 2, variant: 0,
         name: "Pollen I", nameZh: "花粉·一",
         grid: "square", cols: 9, rows: 9,
@@ -988,6 +1031,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p82",
+        album: "garden",
         chapter: 2, variant: 1,
         name: "Pollen II", nameZh: "花粉·二",
         grid: "square", cols: 7, rows: 7,
@@ -1009,6 +1053,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p80",
+        album: "garden",
         chapter: 2, variant: 2,
         name: "Pollen III", nameZh: "花粉·三",
         grid: "square", cols: 5, rows: 5,
@@ -1029,6 +1074,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p5",
+        album: "garden",
         chapter: 3, variant: 0,
         name: "Chlorophyll I", nameZh: "叶绿·一",
         grid: "square", cols: 8, rows: 8,
@@ -1051,6 +1097,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p10",
+        album: "garden",
         chapter: 3, variant: 1,
         name: "Chlorophyll II", nameZh: "叶绿·二",
         grid: "square", cols: 8, rows: 8,
@@ -1073,6 +1120,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p64",
+        album: "garden",
         chapter: 3, variant: 2,
         name: "Chlorophyll III", nameZh: "叶绿·三",
         grid: "square", cols: 7, rows: 7,
@@ -1095,6 +1143,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p91",
+        album: "garden",
         chapter: 4, variant: 0,
         name: "Graft I", nameZh: "嫁接·一",
         grid: "square", cols: 9, rows: 9,
@@ -1118,6 +1167,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p58",
+        album: "garden",
         chapter: 4, variant: 1,
         name: "Graft II", nameZh: "嫁接·二",
         grid: "square", cols: 9, rows: 9,
@@ -1141,6 +1191,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p19",
+        album: "garden",
         chapter: 4, variant: 2,
         name: "Graft III", nameZh: "嫁接·三",
         grid: "square", cols: 9, rows: 9,
@@ -1164,6 +1215,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p88",
+        album: "garden",
         chapter: 5, variant: 0,
         name: "Bloom I", nameZh: "盛放·一",
         grid: "square", cols: 8, rows: 8,
@@ -1182,6 +1234,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p37",
+        album: "garden",
         chapter: 5, variant: 1,
         name: "Bloom II", nameZh: "盛放·二",
         grid: "square", cols: 7, rows: 7,
@@ -1200,6 +1253,7 @@ export const ALBUMS = [
       },
       {
         id: "garden-p20",
+        album: "garden",
         chapter: 5, variant: 2,
         name: "Bloom III", nameZh: "盛放·三",
         grid: "square", cols: 9, rows: 9,
@@ -1231,6 +1285,7 @@ export const ALBUMS = [
     levels: [
       {
         id: "quarry-p60",
+        album: "quarry",
         chapter: 0, variant: 0,
         name: "Tailings I", nameZh: "尾矿·一",
         grid: "square", cols: 7, rows: 7,
@@ -1249,6 +1304,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p11",
+        album: "quarry",
         chapter: 0, variant: 1,
         name: "Tailings II", nameZh: "尾矿·二",
         grid: "square", cols: 8, rows: 8,
@@ -1267,6 +1323,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p71",
+        album: "quarry",
         chapter: 0, variant: 2,
         name: "Tailings III", nameZh: "尾矿·三",
         grid: "square", cols: 6, rows: 6,
@@ -1285,6 +1342,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p59",
+        album: "quarry",
         chapter: 1, variant: 0,
         name: "Seam I", nameZh: "矿层·一",
         grid: "square", cols: 7, rows: 7,
@@ -1307,6 +1365,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p42",
+        album: "quarry",
         chapter: 1, variant: 1,
         name: "Seam II", nameZh: "矿层·二",
         grid: "square", cols: 6, rows: 6,
@@ -1328,6 +1387,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p77",
+        album: "quarry",
         chapter: 1, variant: 2,
         name: "Seam III", nameZh: "矿层·三",
         grid: "square", cols: 9, rows: 9,
@@ -1347,6 +1407,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p1",
+        album: "quarry",
         chapter: 2, variant: 0,
         name: "Slurry I", nameZh: "矿浆·一",
         grid: "square", cols: 7, rows: 7,
@@ -1372,6 +1433,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p50",
+        album: "quarry",
         chapter: 2, variant: 1,
         name: "Slurry II", nameZh: "矿浆·二",
         grid: "square", cols: 6, rows: 6,
@@ -1396,6 +1458,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p4",
+        album: "quarry",
         chapter: 2, variant: 2,
         name: "Slurry III", nameZh: "矿浆·三",
         grid: "square", cols: 7, rows: 7,
@@ -1421,6 +1484,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p8",
+        album: "quarry",
         chapter: 3, variant: 0,
         name: "Overburden I", nameZh: "覆土·一",
         grid: "square", cols: 6, rows: 6,
@@ -1439,6 +1503,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p14",
+        album: "quarry",
         chapter: 3, variant: 1,
         name: "Overburden II", nameZh: "覆土·二",
         grid: "square", cols: 6, rows: 6,
@@ -1457,6 +1522,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p70",
+        album: "quarry",
         chapter: 3, variant: 2,
         name: "Overburden III", nameZh: "覆土·三",
         grid: "square", cols: 7, rows: 7,
@@ -1479,6 +1545,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p79",
+        album: "quarry",
         chapter: 4, variant: 0,
         name: "Fault I", nameZh: "断层·一",
         grid: "square", cols: 9, rows: 9,
@@ -1502,6 +1569,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p85",
+        album: "quarry",
         chapter: 4, variant: 1,
         name: "Fault II", nameZh: "断层·二",
         grid: "square", cols: 9, rows: 9,
@@ -1521,6 +1589,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p22",
+        album: "quarry",
         chapter: 4, variant: 2,
         name: "Fault III", nameZh: "断层·三",
         grid: "square", cols: 8, rows: 8,
@@ -1539,6 +1608,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p88",
+        album: "quarry",
         chapter: 5, variant: 0,
         name: "Core Sample I", nameZh: "岩芯·一",
         grid: "square", cols: 8, rows: 8,
@@ -1561,6 +1631,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p56",
+        album: "quarry",
         chapter: 5, variant: 1,
         name: "Core Sample II", nameZh: "岩芯·二",
         grid: "square", cols: 8, rows: 8,
@@ -1582,6 +1653,7 @@ export const ALBUMS = [
       },
       {
         id: "quarry-p10",
+        album: "quarry",
         chapter: 5, variant: 2,
         name: "Core Sample III", nameZh: "岩芯·三",
         grid: "square", cols: 8, rows: 8,
@@ -1619,6 +1691,7 @@ export const ALBUMS = [
     levels: [
       {
         id: "tide-p32",
+        album: "tide",
         chapter: 0, variant: 0,
         name: "Shallows I", nameZh: "浅滩·一",
         grid: "square", cols: 9, rows: 9,
@@ -1638,6 +1711,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p26",
+        album: "tide",
         chapter: 0, variant: 1,
         name: "Shallows II", nameZh: "浅滩·二",
         grid: "square", cols: 9, rows: 9,
@@ -1661,6 +1735,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p95",
+        album: "tide",
         chapter: 0, variant: 2,
         name: "Shallows III", nameZh: "浅滩·三",
         grid: "square", cols: 7, rows: 7,
@@ -1686,6 +1761,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p66",
+        album: "tide",
         chapter: 1, variant: 0,
         name: "Tide Line I", nameZh: "潮线·一",
         grid: "square", cols: 5, rows: 5,
@@ -1708,6 +1784,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p72",
+        album: "tide",
         chapter: 1, variant: 1,
         name: "Tide Line II", nameZh: "潮线·二",
         grid: "square", cols: 5, rows: 5,
@@ -1727,6 +1804,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p47",
+        album: "tide",
         chapter: 1, variant: 2,
         name: "Tide Line III", nameZh: "潮线·三",
         grid: "square", cols: 8, rows: 8,
@@ -1749,6 +1827,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p50",
+        album: "tide",
         chapter: 2, variant: 0,
         name: "Undertow I", nameZh: "回流·一",
         grid: "square", cols: 6, rows: 6,
@@ -1767,6 +1846,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p13",
+        album: "tide",
         chapter: 2, variant: 1,
         name: "Undertow II", nameZh: "回流·二",
         grid: "square", cols: 9, rows: 9,
@@ -1790,6 +1870,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p68",
+        album: "tide",
         chapter: 2, variant: 2,
         name: "Undertow III", nameZh: "回流·三",
         grid: "square", cols: 5, rows: 5,
@@ -1810,6 +1891,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p16",
+        album: "tide",
         chapter: 3, variant: 0,
         name: "Kelp I", nameZh: "海带·一",
         grid: "square", cols: 8, rows: 8,
@@ -1832,6 +1914,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p7",
+        album: "tide",
         chapter: 3, variant: 1,
         name: "Kelp II", nameZh: "海带·二",
         grid: "square", cols: 7, rows: 7,
@@ -1854,6 +1937,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p94",
+        album: "tide",
         chapter: 3, variant: 2,
         name: "Kelp III", nameZh: "海带·三",
         grid: "square", cols: 9, rows: 9,
@@ -1877,6 +1961,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p64",
+        album: "tide",
         chapter: 4, variant: 0,
         name: "Lagoon I", nameZh: "潟湖·一",
         grid: "square", cols: 8, rows: 8,
@@ -1899,6 +1984,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p22",
+        album: "tide",
         chapter: 4, variant: 1,
         name: "Lagoon II", nameZh: "潟湖·二",
         grid: "square", cols: 9, rows: 9,
@@ -1918,6 +2004,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p35",
+        album: "tide",
         chapter: 4, variant: 2,
         name: "Lagoon III", nameZh: "潟湖·三",
         grid: "square", cols: 8, rows: 8,
@@ -1936,6 +2023,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p44",
+        album: "tide",
         chapter: 5, variant: 0,
         name: "Deep Water I", nameZh: "深水·一",
         grid: "square", cols: 7, rows: 7,
@@ -1958,6 +2046,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p85",
+        album: "tide",
         chapter: 5, variant: 1,
         name: "Deep Water II", nameZh: "深水·二",
         grid: "square", cols: 9, rows: 9,
@@ -1985,6 +2074,7 @@ export const ALBUMS = [
       },
       {
         id: "tide-p5",
+        album: "tide",
         chapter: 5, variant: 2,
         name: "Deep Water III", nameZh: "深水·三",
         grid: "square", cols: 7, rows: 7,
@@ -2022,6 +2112,7 @@ export const ALBUMS = [
     levels: [
       {
         id: "ink-p84",
+        album: "ink",
         chapter: 0, variant: 0,
         name: "Wash I", nameZh: "淡墨·一",
         grid: "square", cols: 7, rows: 7,
@@ -2040,6 +2131,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p8",
+        album: "ink",
         chapter: 0, variant: 1,
         name: "Wash II", nameZh: "淡墨·二",
         grid: "square", cols: 7, rows: 7,
@@ -2062,6 +2154,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p60",
+        album: "ink",
         chapter: 0, variant: 2,
         name: "Wash III", nameZh: "淡墨·三",
         grid: "square", cols: 7, rows: 7,
@@ -2084,6 +2177,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p2",
+        album: "ink",
         chapter: 1, variant: 0,
         name: "Dry Brush I", nameZh: "枯笔·一",
         grid: "square", cols: 5, rows: 5,
@@ -2106,6 +2200,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p66",
+        album: "ink",
         chapter: 1, variant: 1,
         name: "Dry Brush II", nameZh: "枯笔·二",
         grid: "square", cols: 5, rows: 5,
@@ -2126,6 +2221,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p63",
+        album: "ink",
         chapter: 1, variant: 2,
         name: "Dry Brush III", nameZh: "枯笔·三",
         grid: "square", cols: 6, rows: 6,
@@ -2147,6 +2243,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p29",
+        album: "ink",
         chapter: 2, variant: 0,
         name: "Bleed I", nameZh: "洇·一",
         grid: "square", cols: 9, rows: 9,
@@ -2170,6 +2267,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p64",
+        album: "ink",
         chapter: 2, variant: 1,
         name: "Bleed II", nameZh: "洇·二",
         grid: "square", cols: 8, rows: 8,
@@ -2195,6 +2293,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p41",
+        album: "ink",
         chapter: 2, variant: 2,
         name: "Bleed III", nameZh: "洇·三",
         grid: "square", cols: 5, rows: 5,
@@ -2215,6 +2314,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p46",
+        album: "ink",
         chapter: 3, variant: 0,
         name: "Smudge I", nameZh: "擦·一",
         grid: "square", cols: 9, rows: 9,
@@ -2242,6 +2342,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p14",
+        album: "ink",
         chapter: 3, variant: 1,
         name: "Smudge II", nameZh: "擦·二",
         grid: "square", cols: 7, rows: 7,
@@ -2264,6 +2365,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p56",
+        album: "ink",
         chapter: 3, variant: 2,
         name: "Smudge III", nameZh: "擦·三",
         grid: "square", cols: 9, rows: 9,
@@ -2287,6 +2389,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p22",
+        album: "ink",
         chapter: 4, variant: 0,
         name: "Soot I", nameZh: "烟·一",
         grid: "square", cols: 9, rows: 9,
@@ -2310,6 +2413,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p23",
+        album: "ink",
         chapter: 4, variant: 1,
         name: "Soot II", nameZh: "烟·二",
         grid: "square", cols: 9, rows: 9,
@@ -2337,6 +2441,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p28",
+        album: "ink",
         chapter: 4, variant: 2,
         name: "Soot III", nameZh: "烟·三",
         grid: "square", cols: 9, rows: 9,
@@ -2356,6 +2461,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p40",
+        album: "ink",
         chapter: 5, variant: 0,
         name: "Seal I", nameZh: "印·一",
         grid: "square", cols: 7, rows: 7,
@@ -2378,6 +2484,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p85",
+        album: "ink",
         chapter: 5, variant: 1,
         name: "Seal II", nameZh: "印·二",
         grid: "square", cols: 9, rows: 9,
@@ -2401,6 +2508,7 @@ export const ALBUMS = [
       },
       {
         id: "ink-p19",
+        album: "ink",
         chapter: 5, variant: 2,
         name: "Seal III", nameZh: "印·三",
         grid: "square", cols: 7, rows: 7,

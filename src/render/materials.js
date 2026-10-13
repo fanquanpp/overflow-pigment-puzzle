@@ -56,6 +56,12 @@ varying float vHover;
 varying float vRadius;
 varying float vSeed;
 varying vec3  vPlate;
+// The world-space "how much does this fragment face up" (0 side, 1 top), used to
+// darken the plate's sides. It must be world space, not the fragment stage's
+// view-space normal: that one is camera-relative, so a world-up face reads as
+// sideways the moment the camera looks straight down — which darkened the whole
+// board exactly when it was viewed from overhead.
+varying float vFaceUp;
 
 vec3 overflowRotate(vec3 p, vec3 axis, float angle) {
   float c = cos(angle);
@@ -106,8 +112,10 @@ const VERTEX_POSITION = /* glsl */ `
   vSeed = aSeed;
 #ifdef USE_INSTANCING
   vPlate = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;
+  vFaceUp = clamp(normalize((modelMatrix * instanceMatrix * vec4(objectNormal, 0.0)).xyz).y, 0.0, 1.0);
 #else
   vPlate = (modelMatrix * vec4(transformed, 1.0)).xyz;
+  vFaceUp = clamp(normalize((modelMatrix * vec4(objectNormal, 0.0)).xyz).y, 0.0, 1.0);
 #endif
 }
 `;
@@ -120,6 +128,7 @@ varying float vHover;
 varying float vRadius;
 varying float vSeed;
 varying vec3  vPlate;
+varying float vFaceUp;
 
 uniform vec3  uInk;
 uniform vec3  uPaper;
@@ -162,8 +171,11 @@ const FRAGMENT_BODY = /* glsl */ `
   // make the plate's thickness legible. Lighting alone would not do it: with the
   // lights balanced for colour fidelity the sides come out almost as bright as the
   // face, and the board flattens into a decal.
-  float facing = clamp(normal.y, 0.0, 1.0);
-  diffuseColor.rgb *= mix(uEdgeTone, 1.0, smoothstep(0.25, 0.85, facing));
+  //
+  // The test is world-space (vFaceUp), never the fragment stage's view-space
+  // normal.y: the latter makes a world-up face look sideways as soon as the camera
+  // looks straight down, which darkened the board precisely from overhead.
+  diffuseColor.rgb *= mix(uEdgeTone, 1.0, smoothstep(0.25, 0.85, vFaceUp));
 
   // ---- the folded underside reads as paper, not as ink ---------------------
   if (!gl_FrontFacing) {
