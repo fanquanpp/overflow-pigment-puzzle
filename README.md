@@ -1,6 +1,8 @@
+**简体中文** · [English](README.en.md)
+
 # OVERFLOW · 溢彩
 
-**▶ 在线试玩 <https://fanquanpp.github.io/overflow-pigment-puzzle/>** · 约 20 分钟 · 中英双语 · 无构建步骤、零依赖
+**▶ 在线试玩 <https://fanquanpp.github.io/overflow-pigment/>** · 约 20 分钟 · 中英双语 · 无构建步骤、零依赖
 
 **一个颜料混合解谜游戏** · 六个画册 · 108 个棋盘
 
@@ -22,7 +24,7 @@ node tools/serve.mjs          # → http://127.0.0.1:8080/
 
 必须通过 HTTP 打开。项目用 ES modules + import map，`file://` 下会被浏览器拦掉。
 
-线上版本从 `https://fanquanpp.github.io/overflow-pigment-puzzle/` 提供，是仓库根目录的静态文件，由 GitHub Pages 直接托管——没有构建步骤，所以部署就是推送。`npm run serve:prefix` 用 `/overflow-pigment-puzzle/` 子路径在本地复现同样的目录结构，专门用来提前抓出"以裸 `/` 开头的路径"这类只在 Pages 上才暴露的错。
+线上版本从 `https://fanquanpp.github.io/overflow-pigment/` 提供，是仓库根目录的静态文件，由 GitHub Pages 直接托管——没有构建步骤，所以部署就是推送。`npm run serve:prefix` 用 `/overflow-pigment/` 子路径在本地复现同样的目录结构，专门用来提前抓出"以裸 `/` 开头的路径"这类只在 Pages 上才暴露的错。
 
 ```bash
 npm run assets       # 可选：下载 Inter 字体（118 KB）。不下载也能跑
