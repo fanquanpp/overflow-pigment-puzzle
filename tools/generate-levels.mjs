@@ -26,9 +26,9 @@
  *
  * The alternative — decide a chapter's parameters, then hope they produce the
  * difficulty the label claims — does not survive contact with the board: the same
- * fragmentation count is easy on a hex board and brutal on a triangle one, and a
- * replace board needs an order of magnitude more regions than a mix board to reach
- * the same length. Measuring first makes the label true, and turns a hole in the
+ * fragmentation count is easy on a full rectangle and brutal inside a ring
+ * silhouette, and a replace board needs an order of magnitude more regions than a
+ * mix board to reach the same length. Measuring first makes the label true, and turns a hole in the
  * ramp into an unfilled bin that gets reported rather than a level that quietly
  * plays easier than its name.
  */
@@ -129,9 +129,9 @@ const ALBUMS = [
  * shape rather than a rectangle — the renderer gets the outline for free and the
  * engine needs no special case, because a masked cell simply has no neighbours.
  *
- * Triangle boards are always `full`. Their adjacency is bipartite (an up triangle
- * only ever touches down triangles), which makes them easy to cut in half by
- * accident, and a board in two pieces is a bug that looks like a design.
+ * Silhouettes are where a single tiling earns its variety: with the grid always
+ * square, it is the outline (a ring, a bottleneck, a cross) that changes the
+ * problem, and each of these masks changes which regions can reach which.
  */
 const MASKS = {
   full: (cols, rows) => new Array(cols * rows).fill('.'),
@@ -203,18 +203,16 @@ const MASKS = {
   },
 };
 
-/** Board size per scale, per grid shape. Triangle boards are wider because a
- *  triangle tile is half a square wide and 0.87 tall. */
+/** Board size per scale. The grid is always square; only the extent varies. */
 const SIZES = [
-  { square: [5, 5],  hex: [5, 5],  diamond: [5, 5],  triangle: [10, 6] },
-  { square: [6, 6],  hex: [6, 6],  diamond: [6, 6],  triangle: [12, 7] },
-  { square: [7, 7],  hex: [7, 7],  diamond: [7, 7],  triangle: [14, 8] },
-  { square: [7, 7],  hex: [8, 8],  diamond: [7, 7],  triangle: [14, 8] },
-  { square: [8, 8],  hex: [8, 8],  diamond: [8, 8],  triangle: [18, 10] },
-  { square: [9, 9],  hex: [9, 9],  diamond: [9, 9],  triangle: [20, 12] },
+  { square: [5, 5] },
+  { square: [6, 6] },
+  { square: [7, 7] },
+  { square: [7, 7] },
+  { square: [8, 8] },
+  { square: [9, 9] },
 ];
 
-const GRID_CYCLE = ['square', 'hex', 'diamond', 'triangle'];
 const MASK_CYCLE = ['full', 'full', 'diamond', 'ring', 'hourglass', 'cross', 'full', 'bowl'];
 
 /** Difficulty target per chapter. Which board lands where is decided by measurement. */
@@ -356,13 +354,13 @@ function buildAlbum(album) {
     }
     const params = {
       scale,
-      grid: GRID_CYCLE[pick(GRID_CYCLE.length)],
+      grid: 'square',
       ruleKey: RULE_KEYS[pick(RULE_KEYS.length)],
       blobs,
       slack,
       variantIndex: i,
     };
-    params.maskName = params.grid === 'triangle' ? 'full' : MASK_CYCLE[pick(MASK_CYCLE.length)];
+    params.maskName = MASK_CYCLE[pick(MASK_CYCLE.length)];
     const c = makeCandidate(album, params, rnd);
     if (c) pool.push(c);
   }
@@ -373,7 +371,6 @@ function buildAlbum(album) {
   const chosen = [];
   const used = new Set();
   const counts = { mix: 0, classic: 0, recipe: 0 };
-  const gridsSeen = new Set();
 
   for (let chapter = 0; chapter < CHAPTERS; chapter++) {
     const target = CHAPTER_TARGETS[chapter];
@@ -391,29 +388,8 @@ function buildAlbum(album) {
     for (const c of group) {
       used.add(c.level.id);
       counts[c.ruleKey]++;
-      gridsSeen.add(c.grid);
     }
     chosen.push(...group.map((c, i) => ({ ...c, chapter, variant: i })));
-  }
-
-  // If a grid shape never made the cut, swap in the nearest duplicate.
-  for (const g of GRID_CYCLE) {
-    if (gridsSeen.has(g)) continue;
-    const replacement = pool
-      .filter((c) => !used.has(c.level.id) && c.grid === g)
-      .sort((a, b) => Math.abs(a.difficulty - 0.5) - Math.abs(b.difficulty - 0.5))[0];
-    if (!replacement) continue;
-    let worst = null;
-    for (const c of chosen) {
-      const dup = chosen.filter((x) => x.grid === c.grid).length;
-      if (dup > 1 && (!worst || dup > worst.dup)) worst = { c, dup };
-    }
-    if (!worst) continue;
-    used.delete(worst.c.level.id);
-    used.add(replacement.level.id);
-    const at = chosen.indexOf(worst.c);
-    chosen[at] = { ...replacement, chapter: worst.c.chapter, variant: worst.c.variant };
-    gridsSeen.add(g);
   }
 
   chosen.sort((a, b) => a.chapter - b.chapter || a.variant - b.variant);
@@ -607,7 +583,6 @@ export const ALBUM_STATS = Object.fromEntries(
 
 /** Grid shapes actually used, for the how-to-play screen. */
 export const GRID_SHAPES_USED = [...new Set(LEVELS.map((l) => l.grid))];
-
 export const CHAPTER_TARGETS = ${JSON.stringify(CHAPTER_TARGETS)};
 `;
 

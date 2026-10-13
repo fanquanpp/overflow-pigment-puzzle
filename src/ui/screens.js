@@ -22,7 +22,6 @@ import { t, pick, LOCALES, isZh } from '../core/i18n.js';
 import { linearToCss, linearToOklab, oklabToOklch } from '../color/color.js';
 import { PALETTES, paletteFor, mixReflectance, buildPalette } from '../color/pigment.js';
 
-const GRID_TAG = { square: 'badge.square', hex: 'badge.hex', diamond: 'badge.diamond', triangle: 'badge.triangle' };
 const MODE_TAG = { mix: 'badge.mix', replace: 'badge.replace' };
 const BAND_TAG = { gentle: 'band.gentle', steady: 'band.steady', tricky: 'band.tricky', severe: 'band.severe' };
 
@@ -172,7 +171,7 @@ export function createScreens(root, ctx) {
   const HOME_PAGES = [
     { id: 'start', label: 'home.page.start', hero: true, render: renderStart },
     { id: 'mixing', label: 'home.page.mixing', render: renderMixing },
-    { id: 'grids', label: 'home.page.grids', render: renderGrids },
+    { id: 'wave', label: 'home.page.wave', render: renderWave },
     { id: 'inks', label: 'home.page.inks', render: renderInks },
     { id: 'content', label: 'home.page.content', render: renderContents },
   ];
@@ -206,6 +205,7 @@ export function createScreens(root, ctx) {
           },
         }, [icon(ICONS.play)]),
         button(t('title.albums'), { onClick: () => go('albums') }, [icon(ICONS.grid)]),
+        button(t('title.practice'), { onClick: () => { audio.playUi('open'); ctx.startPractice(); } }, [icon(ICONS.dice)]),
         button(t('title.howto'), { onClick: () => go('howto') }, [icon(ICONS.info)]),
         button(t('title.lab'), { onClick: () => go('lab') }, [icon(ICONS.flask)]),
         button(t('title.settings'), { onClick: () => go('settings') }, [icon(ICONS.settings)]),
@@ -259,28 +259,39 @@ export function createScreens(root, ctx) {
     ];
   }
 
-  /** Page three: the four grids. */
-  function renderGrids() {
-    const GLYPH = {
-      square: 'M4.5 4.5h15v15h-15z',
-      hex: 'M12 2.6 20.4 7.3v9.4L12 21.4 3.6 16.7V7.3z',
-      diamond: 'M12 2.6 21.4 12 12 21.4 2.6 12z',
-      triangle: 'M12 3.2 21.6 20H2.4z',
-    };
-    const DEG = { square: 'home.grid.deg4', hex: 'home.grid.deg6', diamond: 'home.grid.deg4', triangle: 'home.grid.deg3' };
-    const grid = el('div', { class: 'grid-demo' });
-    for (const g of ['square', 'hex', 'diamond', 'triangle']) {
-      grid.appendChild(el('div', { class: 'grid-cell' }, [
-        icon(GLYPH[g], { size: 38, width: 1.4 }),
-        el('div', { class: 'nm' }, [t(`home.grid.${g}`), el('small', {}, g)]),
-        el('div', { class: 'dsc' }, t(`home.grid.${g}.d`)),
-        el('div', { class: 'deg' }, t(DEG[g])),
-      ]));
+  /** Page three: how a move spreads, and the practice room. */
+  function renderWave() {
+    // A 5×5 board that shows the ring order of a wave move, numbered from the tap.
+    const N = 5;
+    const tap = { c: 2, r: 2 };
+    const cells = [];
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const d = Math.abs(c - tap.c) + Math.abs(r - tap.r); // manhattan ring
+        cells.push(el('div', { class: 'wave-cell', style: { '--d': String(d) } }, String(d)));
+      }
     }
+    const board = el('div', { class: 'wave-demo' }, cells);
+
     return [
-      sectionHead('02', t('home.grids.title'), t('home.page.grids')),
-      el('p', { class: 'body' }, richText(t('home.grids.body'))),
-      el('div', { style: { marginTop: '18px' } }, [grid]),
+      sectionHead('02', t('home.wave.title'), t('home.page.wave')),
+      el('p', { class: 'body' }, richText(t('home.wave.body'))),
+      el('div', { class: 'wave-wrap' }, [
+        board,
+        el('div', { class: 'wave-note' }, [
+          el('strong', {}, t('home.wave.ringTitle')),
+          ' · ',
+          t('home.wave.ringBody'),
+        ]),
+      ]),
+      el('div', { class: 'note' }, [
+        el('strong', {}, t('home.practice.title')),
+        ' — ',
+        t('home.practice.body'),
+      ]),
+      el('div', { class: 'actions', style: { marginTop: '16px' } }, [
+        button(t('title.practice'), { onClick: () => { audio.playUi('open'); ctx.startPractice(); } }, [icon(ICONS.dice)]),
+      ]),
     ];
   }
 
@@ -311,7 +322,8 @@ export function createScreens(root, ctx) {
     const hardest = ctx.levels.reduce((a, l) => Math.max(a, l.difficulty), 0);
     const moves = ctx.levels.reduce((a, l) => a + l.solution, 0);
     const palettes = new Set(ctx.levels.map((l) => l.palette)).size;
-    const grids = new Set(ctx.levels.map((l) => l.grid)).size;
+    const silhouettes = new Set((ctx.levels.map((l) => l.mask).filter(Boolean))
+      .map((m) => m.join('')).add('')).size || 1;
     const stat = (n, k, red) => el('div', { class: 'stat' }, [
       el('div', { class: `n${red ? ' red' : ''}` }, n),
       el('div', { class: 'k' }, k),
@@ -322,7 +334,7 @@ export function createScreens(root, ctx) {
         stat(String(total), t('home.stat.boards'), true),
         stat(String(ctx.albums.length), t('home.stat.albums')),
         stat(String(palettes), t('home.stat.palettes')),
-        stat(String(grids), t('home.stat.grids')),
+        stat(String(silhouettes), t('home.stat.silhouettes')),
         stat(moves.toLocaleString(), t('home.stat.moves')),
         stat(hardest.toFixed(2), t('home.stat.hardest')),
       ]),
@@ -449,7 +461,6 @@ export function createScreens(root, ctx) {
           el('small', {}, pick(level, 'nameZh')),
         ]),
         el('span', { class: 'level-tags' }, [
-          el('span', { class: 'tag' }, t(GRID_TAG[level.grid] ?? 'badge.square')),
           el('span', { class: 'tag' }, t(MODE_TAG[level.mode] ?? 'badge.mix')),
           level.goal === 'recipe' ? el('span', { class: 'tag' }, t('badge.recipe')) : null,
         ]),

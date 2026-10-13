@@ -1,24 +1,19 @@
 /**
- * Grid geometry — the four tilings the puzzles are played on.
+ * Grid geometry — the square tiling the puzzles are played on.
  *
  * Pure logic. No three.js, no DOM: this module answers "what are the neighbours
  * of this cell", "where is its centre", "what polygon draws it", and "which cell
  * is under this point", and nothing else. Rendering, colour and puzzle rules all
  * build on top of it.
  *
- * The four shapes are not four implementations of the same idea — they change the
- * puzzle:
- *
- *   square    4 neighbours. The classic flood-fill board.
- *   hex       6 neighbours. More routes to merge two regions, so boards are
- *             looser and easier to untangle, and the silhouette reads as organic.
- *   diamond   Isometric projection of a square grid — 4 neighbours, but the
- *             diagonal adjacency that the eye reads (up-left/up-right) is *not*
- *             adjacency. Players misjudge it, which is a legitimate (and
- *             deliberate) source of difficulty.
- *   triangle  3 neighbours, and the tiling is bipartite: every up-pointing
- *             triangle touches only down-pointing ones. Fewer neighbours means
- *             regions are stringier and merging them takes more deliberate work.
+ * The board was once four tilings — square, hex, diamond, triangle. Shipping all
+ * four meant every system below carried a branch for each: the material keyed its
+ * program on ring shape, the validator proved four tilings, the level table showed
+ * a shape tag nobody used for planning. The square won on every axis that matters
+ * — it is the only tiling whose drawn grid *is* the adjacency graph (no diagonal
+ * mirage, no bipartite parity), and silhouettes cut from it (see `mask`) give the
+ * boards their variety instead. So the other three went, and the effort they were
+ * spending went into the wave animation and the practice mode.
  *
  * ---------------------------------------------------------------------------
  * Coordinate conventions
@@ -33,37 +28,17 @@
  * once when it builds its matrices, so nothing downstream has to think about it.
  */
 
-/** Equilateral triangle height for side length 1. */
-const TRI_H = Math.sqrt(3) / 2;
-
-/** cos/sin of the isometric projection angles used by the diamond board. */
-const ISO_X = Math.cos(Math.PI / 6); // 0.8660
-const ISO_Y = Math.sin(Math.PI / 6); // 0.5
-
-export const GRID_TYPES = ['square', 'hex', 'diamond', 'triangle'];
-
-/** Largest neighbour count any of the tilings has; used to size the flat arrays. */
-export const MAX_NEIGHBORS = 6;
-
-/**
- * Neighbour offsets for pointy-top hexes in **odd-r offset** coordinates
- * (rows counted downward, odd rows pushed right by half a hex).
- *
- * Index 0 is used for even rows, index 1 for odd rows. Verified against the
- * geometry rather than transcribed: for an even-row hex the two hexes above are
- * at the same column and at column-1, because it is the *odd* row that is shifted.
- */
-const HEX_ODD_R = [
-  [[+1, 0], [0, -1], [-1, -1], [-1, 0], [-1, +1], [0, +1]],
-  [[+1, 0], [+1, -1], [0, -1], [-1, 0], [0, +1], [+1, +1]],
-];
-
-/** Square/diamond orthogonal neighbours (von Neumann), in y-down space. */
+/** Orthogonal neighbours (von Neumann), in y-down space. */
 const SQUARE_DIRS = [[+1, 0], [0, -1], [-1, 0], [0, +1]];
 
+export const GRID_TYPES = ['square'];
+
+/** Largest neighbour count any tiling has; used to size the flat arrays. */
+export const MAX_NEIGHBORS = 4;
+
 /**
- * Per-shape geometry. Each entry supplies `center`, `polygon` (a flat
- * [x0,y0,x1,y1,…] ring in cell-local space, scaled by `size`) and `approx`
+ * Per-shape geometry. The single square entry supplies `center`, `polygon`
+ * (a flat [x0,y0,…] ring in cell-local space, scaled by `size`) and `approx`
  * (pixel → nearest index, for picking).
  */
 const SHAPES = {
@@ -81,140 +56,7 @@ const SHAPES = {
     },
     approx: (x, y, size) => ({ col: Math.round(x / size), row: Math.round(y / size) }),
   },
-
-  /**
-   * Pointy-top hexes in odd-r offset layout.
-   *
-   * A hex of circumradius `size` is `sqrt(3)*size` wide and `2*size` tall, but
-   * rows overlap: consecutive rows are only `1.5*size` apart. Odd rows are pushed
-   * right by half a hex width.
-   */
-  hex: {
-    neighbors: (col, row) => HEX_ODD_R[row & 1],
-    center: (col, row, size) => ({
-      x: Math.sqrt(3) * size * (col + 0.5 * (row & 1)),
-      y: 1.5 * size * row,
-    }),
-    polygon: (col, row, size) => {
-      const pts = new Float32Array(12);
-      // Vertices every 60°, starting at 90° so one vertex points straight up.
-      for (let i = 0; i < 6; i++) {
-        const a = Math.PI / 2 + (i * Math.PI) / 3;
-        pts[i * 2] = size * Math.cos(a);
-        pts[i * 2 + 1] = size * Math.sin(a);
-      }
-      return pts;
-    },
-    // Invert the axial→pixel mapping, then snap with the cube-rounding rule.
-    approx: (x, y, size) => {
-      const q = ((Math.sqrt(3) / 3) * x - y / 3) / size;
-      const r = ((2 / 3) * y) / size;
-      const { q: rq, r: rr } = cubeRound(q, r);
-      // axial → odd-r offset
-      return { col: rq + (rr - (rr & 1)) / 2, row: rr };
-    },
-  },
-
-  /**
-   * Diamond board: a square grid seen isometrically, so each square renders as a
-   * rhombus. Adjacency is the square grid's 4-neighbour relation — *not* the
-   * visually adjacent rhombi up-left and up-right. See the note at the top of the
-   * file: that mismatch is the point.
-   */
-  diamond: {
-    neighbors: (col, row) => SQUARE_DIRS,
-    center: (col, row, size) => ({
-      x: (col - row) * ISO_X * size,
-      y: (col + row) * ISO_Y * size,
-    }),
-    polygon: (col, row, size) => {
-      // Unit square projected, then re-centred on its own centroid.
-      const c = cellCornerISO(0, 0, size);
-      const k = [cellCornerISO(0, 0, size), cellCornerISO(1, 0, size),
-                 cellCornerISO(1, 1, size), cellCornerISO(0, 1, size)];
-      const cx = (k[0].x + k[1].x + k[2].x + k[3].x) / 4;
-      const cy = (k[0].y + k[1].y + k[2].y + k[3].y) / 4;
-      const pts = new Float32Array(8);
-      for (let i = 0; i < 4; i++) {
-        pts[i * 2] = k[i].x - cx;
-        pts[i * 2 + 1] = k[i].y - cy;
-      }
-      void c;
-      return pts;
-    },
-    approx: (x, y, size) => {
-      // invert: x = (c−r)·ISO_X·s ,  y = (c+r)·ISO_Y·s
-      const a = x / (ISO_X * size);
-      const b = y / (ISO_Y * size);
-      return { col: Math.round((a + b) / 2), row: Math.round((b - a) / 2) };
-    },
-  },
-
-  /**
-   * Triangular tiling.
-   *
-   * Addressing trick: a triangle is `(col, row)` and it points **up** when
-   * `(col + row)` is even. Rows overlap in the same way hex rows do — the triangle
-   * at row `r` has its horizontal edge at `y = TRI_H * size * r`.
-   *
-   * Every triangle's three neighbours are of the opposite orientation, which makes
-   * the adjacency graph bipartite. Derived from the geometry (shared edges) rather
-   * than recalled, and checked by the tiling test in tools/validate-grid.mjs.
-   */
-  triangle: {
-    neighbors: (col, row) => {
-      const up = (col + row) % 2 === 0;
-      // Third neighbour is the one across the horizontal edge: below for an
-      // up-pointing triangle, above for a down-pointing one.
-      return [[+1, 0], [-1, 0], [0, up ? +1 : -1]];
-    },
-    center: (col, row, size) => {
-      const up = (col + row) % 2 === 0;
-      return {
-        x: 0.5 * col * size,
-        y: TRI_H * size * (row + (up ? 2 / 3 : 1 / 3)),
-      };
-    },
-    polygon: (col, row, size) => {
-      const up = (col + row) % 2 === 0;
-      const h = TRI_H * size;
-      if (up) {
-        // apex at the top, horizontal edge at the bottom
-        return new Float32Array([0, (-2 * h) / 3, -0.5 * size, h / 3, 0.5 * size, h / 3]);
-      }
-      return new Float32Array([-0.5 * size, -h / 3, 0.5 * size, -h / 3, 0, (2 * h) / 3]);
-    },
-    approx: (x, y, size) => {
-      const h = TRI_H * size;
-      const row = Math.floor(y / h + 1e-9);
-      const col = Math.round(x / (0.5 * size));
-      return { col, row };
-    },
-  },
 };
-
-function cellCornerISO(col, row, size) {
-  return { x: (col - row) * ISO_X * size, y: (col + row) * ISO_Y * size };
-}
-
-/**
- * Snap fractional axial coordinates to the nearest hex by rounding in cube space
- * and repairing whichever component drifted furthest. This is the standard
- * `cube_round` from the hex-grid literature; rounding q and r independently would
- * produce cells that do not exist.
- */
-function cubeRound(q, r) {
-  const s = -q - r;
-  let rq = Math.round(q);
-  let rr = Math.round(r);
-  let rs = Math.round(s);
-  const dq = Math.abs(rq - q);
-  const dr = Math.abs(rr - r);
-  const ds = Math.abs(rs - s);
-  if (dq > dr && dq > ds) rq = -rr - rs;
-  else if (dr > ds) rr = -rq - rs;
-  return { q: rq, r: rr };
-}
 
 /** Signed area ×2 of a polygon ring; positive means clockwise in y-down space. */
 function ringArea2(pts) {
@@ -230,8 +72,7 @@ function ringArea2(pts) {
 /**
  * Is a point inside a convex polygon ring given in local space? Uses the
  * consistent-sign edge test, which needs the ring's winding to decide the sign —
- * so the winding is measured rather than assumed (triangle tiles are authored in
- * different rotational orders for up and down).
+ * so the winding is measured rather than assumed.
  */
 export function pointInPolygon(pts, px, py) {
   const n = pts.length / 2;
@@ -249,14 +90,14 @@ export function pointInPolygon(pts, px, py) {
  * Build a grid.
  *
  * @param {object} spec
- * @param {'square'|'hex'|'diamond'|'triangle'} spec.type
+ * @param {'square'} spec.type
  * @param {number} spec.cols   columns in the index space (before masking)
  * @param {number} spec.rows   rows in the index space
- * @param {number} [spec.size] cell circumradius / side length, default 1
+ * @param {number} [spec.size] cell side length, default 1
  * @param {(string|boolean)[]} [spec.mask] row-major presence flags; a character
  *        (e.g. '.') or `true` means present, anything else means the cell is cut
- *        out. Lets a level shape the board into a silhouette — a wave, a gem, a
- *        letter — while every array stays dense.
+ *        out. Lets a level shape the board into a silhouette — a gem, a ring, a
+ *        bottleneck — while every array stays dense.
  */
 export function createGrid(spec) {
   const type = spec.type ?? 'square';
@@ -301,8 +142,8 @@ export function createGrid(spec) {
   // --- centres and polygons -------------------------------------------------
   const cx = new Float64Array(count);
   const cy = new Float64Array(count);
-  // Square/hex/diamond share one polygon shape; triangles have two. Cache per
-  // (type, parity) so a 400-cell board allocates two rings, not four hundred.
+  // One polygon shape per grid; cached so a 100-cell board allocates one ring,
+  // not one hundred.
   const polyCache = new Map();
   const polyIndex = new Int8Array(count).fill(-1);
   const polys = [];
@@ -314,12 +155,11 @@ export function createGrid(spec) {
       const c = shape.center(col, row, size);
       cx[i] = c.x;
       cy[i] = c.y;
-      const key = type === 'triangle' ? `t${(col + row) % 2}` : type;
-      let pi = polyCache.get(key);
+      let pi = polyCache.get(type);
       if (pi === undefined) {
         pi = polys.length;
         polys.push(shape.polygon(col, row, size));
-        polyCache.set(key, pi);
+        polyCache.set(type, pi);
       }
       polyIndex[i] = pi;
     }
@@ -409,7 +249,7 @@ export function createGrid(spec) {
     /**
      * Which cell contains this point, or -1. Analytic rather than raycast: the
      * renderer draws thousands of instanced tiles and a per-tile raycast would be
-     * both slower and, on the thin triangle tiles, less accurate at the seams.
+     * both slower and less accurate at the seams.
      *
      * The shape gives an approximate cell; that cell and its neighbours are then
      * containment-tested, which resolves every ambiguity at tile borders without
@@ -498,19 +338,3 @@ export function createGrid(spec) {
 
   return grid;
 }
-
-/** Every tile ring the grid uses, so a renderer can build one geometry per ring. */
-export function gridPolygons(grid) {
-  const seen = new Set();
-  const out = [];
-  for (const i of grid.cells) {
-    const pi = grid.cellPolygon(i);
-    if (!pi || seen.has(pi)) continue;
-    seen.add(pi);
-    out.push(pi);
-  }
-  return out;
-}
-
-export const TRIANGLE_HEIGHT = TRI_H;
-export const ISO = { x: ISO_X, y: ISO_Y };

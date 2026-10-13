@@ -116,7 +116,9 @@ export class Hud {
     this.palette = palette;
 
     this.albumLabel.textContent = pick(album ?? {}, 'name').toUpperCase();
-    this.levelLabel.textContent = `${String(level.chapter + 1).padStart(2, '0')} · ${pick(level, 'name')}`;
+    this.levelLabel.textContent = level.chapter != null
+      ? `${String(level.chapter + 1).padStart(2, '0')} · ${pick(level, 'name')}`
+      : pick(level, 'name');
     this._buildDock(rules, palette);
 
     const goalMask = level.goal === 'recipe' ? rules.goalMask : level.target;
@@ -288,6 +290,24 @@ export class Hud {
     setTimeout(() => {
       node.classList.add('out');
       setTimeout(() => node.remove(), 220);
+    }, ms);
+    while (this.toasts.children.length > 3) this.toasts.firstChild.remove();
+  }
+
+  /**
+   * A toast with an action — the practice room's "another board" affordance, and
+   * anywhere else a small yes/no belongs without a modal over the board.
+   */
+  offer(message, onClick, ms = 6000) {
+    const node = el('div', { class: 'toast offer' }, message);
+    const btn = button(t('practice.againBtn'), { onClick: () => { node.remove(); onClick(); } });
+    node.appendChild(btn);
+    this.toasts.appendChild(node);
+    setTimeout(() => {
+      if (node.isConnected) {
+        node.classList.add('out');
+        setTimeout(() => node.remove(), 220);
+      }
     }, ms);
     while (this.toasts.children.length > 3) this.toasts.firstChild.remove();
   }

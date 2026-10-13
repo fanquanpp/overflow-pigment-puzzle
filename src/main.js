@@ -94,6 +94,7 @@ async function main() {
     stage,
     play: null,
     startLevel,
+    startPractice,
     quitToLevels,
     nextLevelFrom,
     showSolution,
@@ -136,7 +137,7 @@ async function main() {
   /** A board that looks good and demonstrates merging, not one that shows off size. */
   function pickDemoLevel() {
     const album = ALBUMS[0];
-    const candidates = album.levels.filter((l) => l.difficulty > 0.3 && l.difficulty < 0.58 && l.grid !== 'triangle');
+    const candidates = album.levels.filter((l) => l.difficulty > 0.3 && l.difficulty < 0.58);
     return candidates[Math.floor(candidates.length / 2)] ?? album.levels[2];
   }
 
@@ -261,6 +262,29 @@ async function main() {
 
   let currentLevel = null;
 
+  /**
+   * The practice room: a fresh random board, live and playable, that records
+   * nothing. It leaves the menu flow entirely — the HUD shows, the board is
+   * framed like a real level — and the quit button returns to the level list.
+   */
+  function startPractice() {
+    stopDemo();
+    play.demoMode = false;
+    play.practice({ albumId: 'studio' });
+    applyChrome('focus');
+    const level = play.level;
+    const album = play.album ?? ALBUMS[0];
+    applyThemeFor(level);
+    hud.setVisible(true);
+    hud.setLevel(level, album, play.rules, play.palette);
+    applyChrome('focus');
+    screens.hide();
+    audio.ensure();
+    audio.startMusic(album.theme);
+    currentLevel = null; // no album position to return to
+    hud.toast(t('practice.toast'), '', 2400);
+  }
+
   function nextLevelFrom(level) {
     const album = ALBUMS.find((a) => a.id === level.album);
     if (!album) return null;
@@ -326,6 +350,17 @@ async function main() {
         screens.showResult({
           kind: ev.kind, moves: ev.moves, par: ev.par, record: ev.record, level: play.level,
         });
+        break;
+      case 'practiceFinished':
+        // A practice board is not scored, so there is no result card — but the
+        // moment still deserves a mark: a toast, and a fresh board a click away.
+        if (ev.kind === 'settled') {
+          audio.unduckMusic(1.0);
+          hud.toast(t('practice.done', { moves: ev.moves }), '', 3000);
+        } else {
+          hud.toast(t('practice.failed'), 'warn', 3000);
+        }
+        hud.offer(t('practice.again'), () => startPractice());
         break;
       case 'demoFinished':
         break;
@@ -506,7 +541,7 @@ async function main() {
   // genuinely useful when a board misbehaves.
   window.overflow = {
     stage, play, store, audio, screens, hud, ALBUMS, LEVELS, levelById, paletteFor,
-    startLevel, applyChrome, applyThemeFor,
+    startLevel, startPractice, applyChrome, applyThemeFor,
   };
 }
 

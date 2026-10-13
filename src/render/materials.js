@@ -11,12 +11,12 @@
  * What is injected:
  *
  *   keyline    the ink outline every printed patch has, drawn from the tile's own
- *              ring so it follows a hexagon or a triangle exactly instead of being
- *              faked with a distance-to-centre circle
+ *              ring so it follows the tile's real outline instead of being faked
+ *              with a distance-to-centre circle
  *   reverse    a folded tile shows its underside as paper rather than as more ink,
  *              because a fold is a physical event on a sheet
- *   signal     the one red. A hovered region gets a red edge; a tile that just
- *              changed gets one for a moment. Both are flat colour, not glow — a
+ *   signal     the one red. The tile under the pointer gets a red edge; a tile
+ *              the pointer just landed on flashes one. Both are flat colour, not glow — a
  *              signal that glows stops being a signal and becomes an effect.
  *   pattern    the colour-blind overlay, which in this visual language is also the
  *              most idiomatic thing on screen: a dot screen, a line screen, a
@@ -141,8 +141,7 @@ const FRAGMENT_BODY = /* glsl */ `
 {
   // ---- keyline: the ink outline of the patch -------------------------------
   // Distance from this fragment to the tile's own boundary, taken as the smallest
-  // distance to any edge. Exact for a convex ring, so a hexagon gets a hexagonal
-  // outline and a triangle a triangular one.
+  // distance to any edge. Exact for a convex ring.
   float edge = 1e9;
   for (int i = 0; i < ${MAX_RING}; i++) {
     if (i >= uRingN) break;
@@ -190,9 +189,9 @@ const FRAGMENT_BODY = /* glsl */ `
   }
 
   // ---- the signal red -----------------------------------------------------
-  // Hover marks the whole region, because a move acts on a region; the pulse marks
-  // what actually changed. Both are drawn as an edge band, which is how a printed
-  // diagram highlights something.
+  // The pointer marks the one tile it is on; the pulse marks the tile a move was
+  // launched from. Both are drawn as an edge band, which is how a printed diagram
+  // highlights something.
   float band = 1.0 - smoothstep(uKeyline * 1.15, uKeyline * 2.8, edge);
   if (vHover > 0.5) {
     diffuseColor.rgb = mix(diffuseColor.rgb, uSignal, band * 0.95);
@@ -238,13 +237,16 @@ export function createTileMaterial(theme, { ring = null, patternStrength = 0 } =
 
   const ringN = Math.min(MAX_RING, ring ? Math.floor(ring.length / 2) : 0);
   // A vec2 array uniform uploads through Vector2.toArray(); plain {x, y} objects
-  // throw inside three's uniform flattener.
+  // throw inside three's uniform flattener. Slots past ringN are padded with the
+  // FIRST vertex, not (0,0): the fragment loop's wrap segment reads index ringN,
+  // and a (0,0) there draws a keyline from the ring's last corner to the tile
+  // centre — on a square, a full corner-to-centre diagonal. Padding with the
+  // first vertex makes the wrap segment the ring's real closing edge.
   const ringArray = [];
   for (let i = 0; i < MAX_RING; i++) {
-    ringArray.push(new Vector2(
-      ring && i * 2 + 1 < ring.length ? ring[i * 2] : 0,
-      ring && i * 2 + 1 < ring.length ? ring[i * 2 + 1] : 0
-    ));
+    const px = ring && i * 2 + 1 < ring.length ? ring[i * 2] : (ring && ring.length >= 2 ? ring[0] : 0);
+    const py = ring && i * 2 + 1 < ring.length ? ring[i * 2 + 1] : (ring && ring.length >= 2 ? ring[1] : 0);
+    ringArray.push(new Vector2(px, py));
   }
 
   const uniforms = {

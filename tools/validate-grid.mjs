@@ -160,7 +160,6 @@ function checkOverlap(grid, rnd, pairs) {
 function checkEdges(grid, refGrid) {
   // Map each cell's neighbour slots to the ring edge that faces them.
   let bad = 0;
-  const shape = { square: 4, hex: 6, diamond: 4, triangle: 3 }[grid.type];
 
   // Candidate directions come from the same cell in an *unmasked* grid of the same
   // shape, never from a blanket 8-offset list: on a square board the diagonal is a

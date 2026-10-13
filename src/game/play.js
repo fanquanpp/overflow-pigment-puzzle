@@ -19,9 +19,10 @@
  *   sound   the region's own note plus the pigment's, so the interval *is* the
  *           feedback: a unison means nothing was added, a fifth means a merge
  *
- * Hover is the other half of readability. Hovering a tile highlights its whole
- * region, because a move acts on a region and the player is choosing a region — not
- * a tile.
+ * Hover is the other half of readability. The pointer marks exactly the tile it is
+ * over — the board answers "which tile am I on" — while the HUD reports the region
+ * that tile belongs to and what the armed pigment would do to it, because that is
+ * the decision, not the highlight.
  */
 
 import { Euler, Group, Vector3 } from 'three';
@@ -30,6 +31,7 @@ import { themeFor } from '../render/themes.js';
 import { compileLevel, createSession, FREE, isSolved, isStuck, findRegion } from '../puzzle/rules.js';
 import { analyse } from '../puzzle/solve.js';
 import { paletteFor } from '../color/pigment.js';
+import { generateBoard, mulberry32, seedFrom } from '../puzzle/generate.js';
 import { MAX_NEIGHBORS } from '../grid/grid.js';
 
 /** The furthest the board tips under the pointer, in radians. */
@@ -54,6 +56,80 @@ export function haveCounts(rules, colors) {
     for (let p = 0; p < rules.pigmentCount; p++) if (colors[cell] & (1 << p)) have[p]++;
   }
   return have;
+}
+
+/**
+ * BFS ring distance for every cell of a region, from the cell that was tapped.
+ *
+ * This is what turns a move into a wave: ring 0 is the tap, ring 1 its neighbours
+ * in the region, and so on. The renderer staggers each ring's animation by
+ * `waveDelay`, so the change rolls outward from the finger instead of landing as
+ * one swap. Returns a Map cell → ring index.
+ */
+export function waveRegion(grid, colors, region, tap) {
+  const dist = new Map();
+  if (!region.includes(tap)) {
+    // A region whose tap is elsewhere (should not happen, but never wedge on it):
+    // everything starts together.
+    return dist;
+  }
+  dist.set(tap, 0);
+  let frontier = [tap];
+  let ring = 0;
+  const wanted = new Set(region);
+  while (frontier.length) {
+    ring++;
+    const next = [];
+    for (const cell of frontier) {
+      const base = cell * MAX_NEIGHBORS;
+      for (let k = 0; k < MAX_NEIGHBORS; k++) {
+        const nb = grid.nbr[base + k];
+        if (nb < 0) break;
+        if (dist.has(nb) || !wanted.has(nb)) continue;
+        dist.set(nb, ring);
+        next.push(nb);
+      }
+    }
+    frontier = next;
+  }
+  return dist;
+}
+
+/**
+ * Generate one random practice board.
+ *
+ * The practice mode is the other half of the design borrowed from the sketch: a
+ * board that exists to be played with, drawn fresh on demand, that records nothing
+ * and unlocks nothing. It uses the same generator and the same analyser the albums
+ * use, at a mid difficulty, so a practice board looks and plays like the real
+ * thing — it is just not scored.
+ */
+export function generatePracticeBoard(albumId = 'studio', difficulty = 0.45) {
+  const album = albumId;
+  const seed = `practice-${Math.floor(Math.random() * 0xffffffff)}`;
+  const spec = {
+    id: seed,
+    album,
+    grid: 'square',
+    cols: 8, rows: 8,
+    mask: null,
+    palette: 'printer',
+    mode: 'mix',
+    goal: 'unify',
+    target: 0b111,
+    blobs: 14,
+    keep: 1,
+    slack: 2,
+    paletteLookup: (key) => paletteFor(key),
+  };
+  const rnd = mulberry32(seedFrom(seed));
+  // A few attempts, keeping the candidate nearest the requested difficulty — the
+  // same contract generateBoard has for its albums, applied to a throwaway board.
+  const entry = generateBoard(spec, { rng: rnd, attempts: 10, beamWidth: 180, targetDifficulty: difficulty });
+  if (entry) return entry.level;
+  // Fallback: the generator's own last word, or the spec as it stands. A practice
+  // board that is slightly off-difficulty is fine; one that fails to appear is not.
+  return spec;
 }
 
 export class Play {
@@ -85,6 +161,8 @@ export class Play {
     this.finished = null;
     /** When true the board is scenery: no progress is recorded, no result shown. */
     this.demoMode = false;
+    /** When true the board is a random practice board: live, but unscored. */
+    this.practiceMode = false;
   }
 
   // -------------------------------------------------------------------------
@@ -98,6 +176,9 @@ export class Play {
     this.solution = null;
     this.replaying = null;
     this.finished = null;
+    // A scored load clears practice unless the caller re-sets it after `load`
+    // (practice() does). Loading an album board always ends a practice run.
+    if (album?.id !== 'practice') this.practiceMode = false;
 
     const palette = paletteFor(level.palette);
     this.rules = compileLevel(level, (key) => paletteFor(key));
@@ -250,9 +331,13 @@ export class Play {
       pigment: this.selected,
     });
 
-    this.field.setCells(this.session.colors, result.region, { animate: true });
+    // The wave: BFS ring distance from the tap, so each ring of the region waits
+    // its turn before folding. Undo and reset call setCells without a distance and
+    // stay instant — those are corrections, not events.
+    const dist = waveRegion(this.rules.grid, this.session.colors, result.region, cell);
+    this.field.rippleAt(cell);
+    this.field.setCells(this.session.colors, result.region, { animate: true, dist });
     this.field.foldCells(result.region);
-    this.field.pulseCells(result.region, 0.55 + Math.min(0.5, result.size * 0.03));
 
     this.onEvent({ type: 'move', result, session: this.session, need: needCounts(this.rules, this.session.colors) });
     this._emitState();
@@ -289,6 +374,37 @@ export class Play {
 
   restart() {
     this.load(this.level, this.album);
+  }
+
+  // -------------------------------------------------------------------------
+  // practice
+  // -------------------------------------------------------------------------
+
+  /**
+   * Load a fresh random board. Nothing about it is recorded: `practiceMode`
+   * suppresses the result card and the progress record the same way `demoMode`
+   * does, but the board is live and the player plays it themselves.
+   */
+  practice({ albumId = 'studio', difficulty = 0.45, palette = 'printer' } = {}) {
+    this.stopReplay();
+    // A demo board replaying itself over a practice board would be two ghosts in
+    // one machine; whoever calls this wants a live board. (The UI entry also stops
+    // the demo's timer loop — this clears the flag on the play side.)
+    this.demoMode = false;
+    const level = generatePracticeBoard(albumId, difficulty);
+    level.palette = level.palette ?? palette;
+    // load() clears practiceMode for album boards, so the flag is set after it —
+    // the album check inside load() must keep winning for real album levels.
+    this.load(level, this.album ?? { id: 'practice', theme: 'studio', name: 'Practice', nameZh: '练习' });
+    this.practiceMode = true;
+    // The goal line reads as a scored level otherwise; a practice board has no par.
+    this.onEvent({ type: 'practice', level });
+    this._emitState();
+    return level;
+  }
+
+  get inPractice() {
+    return this.practiceMode === true && this.demoMode !== true;
   }
 
   // -------------------------------------------------------------------------
@@ -360,11 +476,18 @@ export class Play {
     const moves = this.session.moves;
     const par = this.level.solution ?? null;
 
-    // A demo board is scenery behind a menu. Recording it would hand the player
-    // progress they did not earn, and showing a result card would interrupt the
-    // menu they are reading.
+    // A demo board is scenery behind a menu. A practice board is live play, but it
+    // is not a level in any album: recording it would hand the player progress they
+    // did not earn against a real board, and showing the scored result card would
+    // pretend otherwise. Both just finish, quietly.
     if (this.demoMode) {
       this.onEvent({ type: 'demoFinished', kind });
+      return;
+    }
+    if (this.practiceMode) {
+      if (kind === 'settled') this.audio.playSettled({ moves, par: moves });
+      else this.audio.playFailed();
+      this.onEvent({ type: 'practiceFinished', kind, moves });
       return;
     }
 
@@ -377,9 +500,7 @@ export class Play {
       this.store.record(this.level.id, { settled: false, moves });
     }
     this.onEvent({ type: 'finished', kind, moves, par, record, session: this.session });
-  }
-
-  _emitState() {
+  }  _emitState() {
     if (!this.rules) return;
     this.onEvent({
       type: 'state',
@@ -423,8 +544,12 @@ export class Play {
       this.onEvent({ type: 'hover', cell: -1, region: [] });
       return;
     }
+    // Highlight exactly the tile under the pointer, not its whole region. The
+    // region is still what a move acts on, and the HUD still reports its size and
+    // the previewed outcome — but the board itself answers "which tile am I on",
+    // which is the question the pointer is actually asking.
     const region = this.field.regionOf(this.hoverCell, this.session.colors);
-    this.field.setHover(region);
+    this.field.setHover([this.hoverCell]);
 
     // Preview what the selected pigment would do here, so the player can see the
     // outcome before committing a move.

@@ -29,16 +29,10 @@ function inwardNormal(ax, ay, bx, by, sign) {
  * Offset a convex polygon inward by `d`, along each vertex's angle bisector.
  *
  * Centroid scaling — the obvious shortcut — is only uniform for regular polygons.
- * The diamond board's tiles are 60°/120° rhombi, where scaling by a single factor
- * pulls the short diagonal in twice as far as the long one and the gaps come out
- * visibly uneven. The bisector offset is exact for any convex ring and costs one
- * loop.
+ * The bisector offset is exact for any convex ring and costs one loop.
  *
- * The ring's winding is *measured* rather than assumed. The rings in grid.js do not
- * all wind the same way — the up-pointing triangle ring runs opposite to the
- * square, hex and diamond rings — and an inset that guessed would push that one
- * shape outward and turn it inside out. `tools/validate-grid.mjs` checks that no
- * ring inverts under the inset it is actually given.
+ * The ring's winding is *measured* rather than assumed. `tools/validate-grid.mjs`
+ * checks that no ring inverts under the inset it is actually given.
  */
 export function insetPolygon(pts, d) {
   const n = pts.length / 2;
@@ -75,21 +69,4 @@ export function ringRadius(pts) {
   let r = 0;
   for (let i = 0; i < pts.length; i += 2) r = Math.max(r, Math.hypot(pts[i], pts[i + 1]));
   return r || 1;
-}
-
-/** Inradius of a regular ring: the distance from its centre to an edge. */
-export function ringInradius(pts) {
-  const n = pts.length / 2;
-  if (!n) return 0;
-  let best = Infinity;
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n;
-    const ax = pts[i * 2], ay = pts[i * 2 + 1];
-    const bx = pts[j * 2], by = pts[j * 2 + 1];
-    const dx = bx - ax, dy = by - ay;
-    const l = Math.hypot(dx, dy) || 1;
-    // distance from the origin to the line through a and b
-    best = Math.min(best, Math.abs(dx * -ay - dy * -ax) / l);
-  }
-  return best;
 }

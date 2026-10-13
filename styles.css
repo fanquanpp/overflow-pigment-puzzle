@@ -1001,6 +1001,18 @@ kbd {
 .toast.good { background: var(--blue); color: var(--paper); }
 .toast.warn { background: var(--ochre); color: var(--ink); }
 .toast.out { animation: slip-out 0.2s var(--ease) both; }
+.toast.offer { display: flex; align-items: center; gap: 12px; pointer-events: auto; }
+.toast.offer button {
+  border: 1px solid var(--paper);
+  background: transparent;
+  color: var(--paper);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.toast.offer button:hover { background: var(--paper); color: var(--ink); }
 @keyframes slip { from { transform: translateX(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes slip-out { to { transform: translateX(-14px); opacity: 0; } }
 
@@ -1097,16 +1109,31 @@ kbd {
 .mix-foot .eq { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-2); }
 .mix-foot .res { font-size: 0.76rem; font-weight: 700; margin-top: 2px; }
 
-/* the four grids */
-.grid-demo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border: 1px solid var(--ink); }
-.grid-cell { padding: 13px 12px 14px; border-right: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft); }
-.grid-cell:nth-child(2n) { border-right: 0; }
-.grid-cell:nth-last-child(-n + 2) { border-bottom: 0; }
-.grid-cell svg { display: block; stroke: var(--ink); fill: none; stroke-width: 1.5; }
-.grid-cell .nm { margin-top: 9px; font-size: 0.78rem; font-weight: 700; }
-.grid-cell .nm small { display: block; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.09em; color: var(--ink-3); }
-.grid-cell .dsc { margin-top: 6px; font-size: 0.72rem; line-height: 1.4; color: var(--ink-2); }
-.grid-cell .deg { margin-top: 8px; font-family: var(--mono); font-size: 0.66rem; color: var(--red); }
+/* the wave ring diagram: ring distance from the tap, printed as tone */
+.wave-wrap { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; margin-top: 18px; }
+.wave-demo {
+  display: grid;
+  grid-template-columns: repeat(5, 34px);
+  grid-auto-rows: 34px;
+  gap: 2px;
+  border: 2px solid var(--ink);
+  padding: 6px;
+  background: var(--paper-3);
+}
+.wave-cell {
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--rule-soft);
+  /* ring 0 is the ink's deepest tone; further rings sit on paler paper */
+  background: color-mix(in oklab, var(--ink) calc((4 - var(--d)) * 9%), var(--paper-2));
+  color: color-mix(in oklab, var(--ink) calc(var(--d) * 24% + 6%), var(--paper));
+}
+.wave-note { max-width: 30ch; font-size: 0.74rem; line-height: 1.5; color: var(--ink-2); }
+.wave-note strong { color: var(--ink); }
 
 /* the numbers */
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--ink); }

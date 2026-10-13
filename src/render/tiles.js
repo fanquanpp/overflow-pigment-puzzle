@@ -8,18 +8,20 @@
  * ---------------------------------------------------------------------------
  * Three decisions worth explaining
  * ---------------------------------------------------------------------------
- * **One geometry, not one per orientation.** A triangular tiling has up-pointing
- * and down-pointing tiles, which look like two shapes. They are one shape: rotating
- * an equilateral triangle by 180° in its own plane turns it over. So the geometry is
- * built once from the up-pointing ring and down-pointing cells get a 180° rotation
- * baked into their instance matrix. That keeps a single draw call per grid and a
- * single mapping from cell to instance, which everything else here relies on.
+ * **The wave, not the instant swap.** A move recolours a whole region at once, and
+ * a region appearing in one frame reads as a fill rather than as an event. So the
+ * per-cell animation start is scheduled by the cell's BFS distance from the tap:
+ * each ring of the flood waits `waveDelay` before its own fold-and-blend begins,
+ * and the move rolls outward like ink taking to a wet sheet. The delay lives on
+ * the instance (`waveWait`), the frame loop counts it down, and nothing upstream
+ * needs to know — the region still changes in the same order the rules engine
+ * computed it in.
  *
  * **Picking is analytic, not a raycast.** `InstancedMesh.raycast` walks every
- * instance and tests its geometry — on the thin triangle tiles that is both slow and
- * inaccurate at the seams. Instead the pointer ray is intersected with the board's
- * own plane and the hit is resolved by `grid.pickAt`, the same maths the geometry
- * validator checks, so a click can never land on a tile that is not there.
+ * instance and tests its geometry — slow, and inaccurate at the seams. Instead the
+ * pointer ray is intersected with the board's own plane and the hit is resolved by
+ * `grid.pickAt`, the same maths the geometry validator checks, so a click can never
+ * land on a tile that is not there.
  *
  * **The impression, not a reflection.** The previous version drew a mirrored copy of
  * the field below the floor to fake a glossy reflection. A mirror belongs to a
@@ -76,6 +78,8 @@ export class TileField {
       colorFrom: new Float32Array(this.count * 3),
       colorTo: new Float32Array(this.count * 3),
       blend: new Float32Array(this.count),
+      /** Countdown before this tile's blend/fold begins — the wave's per-ring delay. */
+      waveWait: new Float32Array(this.count),
       fold: new Float32Array(this.count),
       foldT: new Float32Array(this.count),
       foldMax: new Float32Array(this.count),
@@ -100,8 +104,7 @@ export class TileField {
     const depth = theme.tile.depth;
     const bevel = theme.tile.bevel;
 
-    // The canonical ring: cell 0's polygon. Every other tile is this shape moved,
-    // and on a triangle board sometimes turned over.
+    // The canonical ring: cell 0's polygon. Every other tile is this shape, moved.
     const canonical = this.grid.cells.find((i) => grid.cellPolygon(i)) ?? 0;
     const ring = grid.cellPolygon(canonical);
     this.radius = ringRadius(ring);
@@ -162,7 +165,6 @@ export class TileField {
     const hover = new Float32Array(this.count);
 
     const center = grid.center;
-    const isTriangle = grid.type === 'triangle';
     // Seed the colour buffer with the first *pigment*, not the empty mixture at
     // index 0. The empty entry is white by definition, so seeding with it makes the
     // board flash white for the frame before the first setColors.
@@ -171,12 +173,11 @@ export class TileField {
     for (let i = 0; i < this.count; i++) {
       const cell = grid.cells[i];
       const c = grid.cellCenter(cell);
-      const { col, row } = grid.coordsOf(cell);
       // Grid space is y-down and the world is y-up; mapping grid y straight onto
       // world z keeps row 0 at z = 0 with rows running away from the camera.
       const wx = c.x - center.x;
       const wz = c.y - center.y;
-      m.makeRotationY(isTriangle && (col + row) % 2 === 1 ? Math.PI : 0);
+      m.identity();
       m.setPosition(wx, 0, wz);
       mesh.setMatrixAt(i, m);
       mesh.setColorAt(i, new Color(seedEntry.linear[0], seedEntry.linear[1], seedEntry.linear[2]));
@@ -249,8 +250,8 @@ export class TileField {
     });
 
     const mesh = new InstancedMesh(geo, mat, this.count);
-    // Copy the plate's matrices and push each one down and sideways. Composing a
-    // translation on the right keeps the triangle parity rotation intact.
+    // Copy the plate's matrices and push each one down and sideways. Composing the
+    // translation on the right keeps any per-instance rotation intact.
     const src = this.mesh.instanceMatrix.array;
     const dst = mesh.instanceMatrix.array;
     dst.set(src);
@@ -296,9 +297,18 @@ export class TileField {
     if (wrote) this.mesh.instanceColor.needsUpdate = true;
   }
 
-  /** Update only the cells that changed, so a move animates just its own region. */
-  setCells(colors, cells, { animate = true, duration = null } = {}) {
+  /**
+   * Update only the cells that changed, so a move animates just its own region.
+   *
+   * `dist` — the BFS ring distance of each changed cell from the tap, as produced
+   * by the caller — turns a region-wide swap into a wave: ring 0 starts now, ring
+   * 1 after `waveDelay` seconds, and so on, so the move rolls outward from the
+   * finger. When `dist` is omitted the whole region starts together, which is what
+   * undo/reset want: those are corrections, not events.
+   */
+  setCells(colors, cells, { animate = true, duration = null, dist = null, waveDelay = null } = {}) {
     this._blendTime = duration ?? this.theme.tile.blendTime;
+    const delay = waveDelay ?? this.theme.tile.waveDelay;
     let wrote = false;
     for (const cell of cells) {
       const i = this.cellToInstance[cell];
@@ -306,9 +316,26 @@ export class TileField {
       const entry = this.palette.entries[colors[cell]] ?? this.palette.entries[0];
       wrote = this._aim(i, entry, animate) || wrote;
       this.attrs.pattern.array[i] = PATTERN_ID[entry.pattern] ?? 0;
+      // The wave's per-ring delay. Fold and blend wait for it in update(); the
+      // colour target is already correct, so nothing else needs to know.
+      this.state.waveWait[i] = animate && dist ? (dist.get(cell) ?? 0) * delay : 0;
     }
     this.attrs.pattern.needsUpdate = true;
     if (wrote) this.mesh.instanceColor.needsUpdate = true;
+  }
+
+  /**
+   * A white ripple under the tap point: the clicked tile pulses hard once, before
+   * the colour wave starts. Cheap — one glow write — but it is what makes a tap
+   * feel received rather than merely processed.
+   */
+  rippleAt(cell) {
+    const i = this.cellToInstance[cell];
+    if (i < 0) return;
+    this.state.glow[i] = Math.max(this.state.glow[i], 0.9);
+    this.state.scaleTarget[i] = 1.05;
+    this._dirty.glow = true;
+    this._dirty.scale = true;
   }
 
   /**
@@ -378,19 +405,7 @@ export class TileField {
     this._dirty.fold = true;
   }
 
-  /** Signal a set of tiles — used on the tiles a move actually changed. */
-  pulseCells(cells, amount = 1) {
-    for (const cell of cells) {
-      const i = this.cellToInstance[cell];
-      if (i < 0) continue;
-      this.state.glow[i] = Math.max(this.state.glow[i], amount);
-      this.state.scaleTarget[i] = 1.03;
-    }
-    this._dirty.glow = true;
-    this._dirty.scale = true;
-  }
-
-  /** Mark a set of tiles as the region a click would affect. */
+  /** Mark a set of tiles as highlighted — the pointer's tile, or a hover region. */
   setHover(cells) {
     const arr = this.attrs.hover.array;
     let changed = false;
@@ -484,7 +499,13 @@ export class TileField {
     let colorDirty = false;
 
     for (let i = 0; i < this.count; i++) {
-      if (s.blend[i] < 1) {
+      // The wave delay: hold this tile's fold and blend until its ring's turn.
+      if (s.waveWait[i] > 0) {
+        s.waveWait[i] = Math.max(0, s.waveWait[i] - dt);
+      }
+      const waiting = s.waveWait[i] > 0;
+
+      if (s.blend[i] < 1 && !waiting) {
         s.blend[i] = Math.min(1, s.blend[i] + blendStep);
         const t = s.blend[i];
         // smoothstep, so the change settles rather than stopping dead
@@ -507,7 +528,7 @@ export class TileField {
         }
       }
 
-      if (s.foldT[i] > 0 && s.foldT[i] < 1) {
+      if (s.foldT[i] > 0 && s.foldT[i] < 1 && !waiting) {
         s.foldT[i] = Math.min(1, s.foldT[i] + foldStep);
         s.fold[i] = Math.sin(s.foldT[i] * Math.PI) * s.foldMax[i];
         this.attrs.fold.array[i] = s.fold[i];
@@ -551,6 +572,7 @@ export class TileField {
   get animating() {
     const s = this.state;
     for (let i = 0; i < this.count; i++) {
+      if (s.waveWait[i] > 0) return true;
       if (s.blend[i] < 1 || (s.foldT[i] > 0 && s.foldT[i] < 1) || s.glow[i] > 0.001 ||
           Math.abs(s.scale[i] - s.scaleTarget[i]) > 1e-4) return true;
     }

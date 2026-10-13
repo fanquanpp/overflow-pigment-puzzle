@@ -30,16 +30,14 @@ const lookup = (key) => paletteFor(key);
 console.log('\n1. reverse construction always yields a solvable, well-formed board');
 
 const SPECS = [];
-for (const grid of GRID_TYPES) {
-  for (const palette of SHIPPED_PALETTES.slice(0, 3)) {
-    SPECS.push({
-      id: `smoke-${grid}-${palette}`,
-      grid, cols: grid === 'triangle' ? 10 : 6, rows: grid === 'triangle' ? 6 : 6,
-      palette, mode: 'mix', goal: 'unify',
-      target: 0b111, steps: 6, stepsSpread: 4, slack: 1,
-      paletteLookup: lookup,
-    });
-  }
+for (const palette of SHIPPED_PALETTES.slice(0, 3)) {
+  SPECS.push({
+    id: `smoke-square-${palette}`,
+    grid: 'square', cols: 6, rows: 6,
+    palette, mode: 'mix', goal: 'unify',
+    target: 0b111, steps: 6, stepsSpread: 4, slack: 1,
+    paletteLookup: lookup,
+  });
 }
 
 for (const spec of SPECS) {
@@ -57,7 +55,7 @@ for (const spec of SPECS) {
   }
   const won = isSolved(rules, session.colors);
   if (!won) fail(`${spec.id}: replaying the solution did not win`);
-  else if (VERBOSE || spec.grid === 'square') {
+  else if (VERBOSE) {
     console.log(
       `  ✓ ${spec.id.padEnd(26)} ${String(entry.report.length).padStart(2)} moves` +
       ` (budget ${entry.level.budget}, lb ${entry.report.lowerBound})` +
@@ -114,7 +112,7 @@ console.log('\n4. recipe boards mark cells and stay winnable');
 
 {
   const spec = {
-    id: 'recipe', grid: 'hex', cols: 6, rows: 6, palette: 'painter',
+    id: 'recipe', grid: 'square', cols: 6, rows: 6, palette: 'painter',
     mode: 'mix', goal: 'recipe', steps: 5, slack: 2, markRatio: 0.6,
     paletteLookup: lookup,
   };
@@ -144,10 +142,9 @@ console.log('\n5. the move budget is achievable — every generated board can be
   let worst = 0;
   for (let seed = 0; seed < 24; seed++) {
     const palette = SHIPPED_PALETTES[seed % SHIPPED_PALETTES.length];
-    const grid = GRID_TYPES[seed % GRID_TYPES.length];
     const spec = {
-      id: `budget-${seed}`, grid,
-      cols: grid === 'triangle' ? 10 : 5 + (seed % 3), rows: 5 + (seed % 3),
+      id: `budget-${seed}`, grid: 'square',
+      cols: 5 + (seed % 3), rows: 5 + (seed % 3),
       palette, mode: 'mix', goal: 'unify', target: 0b111, steps: 5, slack: 1,
       paletteLookup: lookup,
     };
@@ -156,7 +153,7 @@ console.log('\n5. the move budget is achievable — every generated board can be
     const rules = compileLevel(entry.level, lookup);
     const session = createSession(rules);
     for (const mv of entry.report.moves) session.play(mv.cell, mv.pigment);
-    if (!session.solved) { fail(`seed ${seed} (${grid}/${palette}): budget not achievable`); continue; }
+    if (!session.solved) { fail(`seed ${seed} (${palette}): budget not achievable`); continue; }
     checked++;
     worst = Math.max(worst, entry.report.difficulty);
   }
@@ -165,7 +162,7 @@ console.log('\n5. the move budget is achievable — every generated board can be
 }
 
 // ---------------------------------------------------------------------------
-console.log('\n6. every shipped palette compiles and every grid type is reachable');
+console.log('\n6. every shipped palette compiles and every board is square');
 
 {
   let bad = 0;
@@ -173,15 +170,12 @@ console.log('\n6. every shipped palette compiles and every grid type is reachabl
     const pal = buildPalette(PALETTES[key].pigments);
     if (pal.entries.length !== (1 << pal.pigments.length)) { fail(`${key}: palette is not the full subset lattice`); bad++; }
   }
-  for (const grid of GRID_TYPES) {
-    const spec = {
-      id: `cover-${grid}`, grid, cols: 6, rows: 6, palette: 'printer',
-      mode: 'mix', goal: 'unify', target: 0b111, steps: 4, slack: 2, paletteLookup: lookup,
-    };
-    const entry = generateBoard(spec, { rng: mulberry32(7), attempts: 6, beamWidth: 100 });
-    if (!entry) { fail(`${grid}: nothing generated`); bad++; }
-  }
-  if (!bad) ok(`${SHIPPED_PALETTES.length} palettes × ${GRID_TYPES.length} grids all compile`);
+  const entry = generateBoard({
+    id: 'cover-square', grid: 'square', cols: 6, rows: 6, palette: 'printer',
+    mode: 'mix', goal: 'unify', target: 0b111, steps: 4, slack: 2, paletteLookup: lookup,
+  }, { rng: mulberry32(7), attempts: 6, beamWidth: 100 });
+  if (!entry) { fail('square: nothing generated'); bad++; }
+  if (!bad) ok(`${SHIPPED_PALETTES.length} palettes compile on the square tiling`);
 }
 
 console.log(failures === 0 ? '\nsmoke test passed\n' : `\n${failures} smoke check(s) FAILED\n`);

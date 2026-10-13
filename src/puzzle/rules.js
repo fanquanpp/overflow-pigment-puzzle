@@ -210,7 +210,7 @@ export function progress(rules, colors) {
  * Compile a level definition into the tables the engine and the solver both use.
  *
  * @param {object} level
- * @param {string} level.grid     square | hex | diamond | triangle
+ * @param {string} level.grid     square
  * @param {number} level.cols
  * @param {number} level.rows
  * @param {string[]} [level.mask] row-major presence flags, '.' = present

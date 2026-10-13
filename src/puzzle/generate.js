@@ -190,7 +190,7 @@ function assignReplaceMasks(grid, owner, pigmentCount, rnd) {
  * Build one board: partition, then colour.
  *
  * @param {object} spec
- * @param {'square'|'hex'|'diamond'|'triangle'} spec.grid
+ * @param {'square'} spec.grid
  * @param {number} spec.cols
  * @param {number} spec.rows
  * @param {string[]} [spec.mask]

@@ -197,11 +197,13 @@ for (const { album, rows } of perAlbum) {
   const grids = new Set(rows.map((r) => r.level.grid));
   const modes = new Set(rows.map((r) => r.level.mode));
   const goals = new Set(rows.map((r) => r.level.goal));
+  const silhouettes = new Set(rows.map((r) => (r.level.mask ? r.level.mask.join('') : 'full')));
 
   if (!QUIET) {
     console.log(`\n  ${album.nameZh} / ${album.name}  [${album.palette}]`);
     console.log(
       `    ${rows.length} boards · ${[...grids].sort().join(', ')} · ` +
+      `${silhouettes.size} silhouettes · ` +
       `modes ${[...modes].sort().join('/')} · goals ${[...goals].sort().join('/')}`
     );
     console.log(
@@ -213,7 +215,10 @@ for (const { album, rows } of perAlbum) {
       `(${hardest.moves} moves in ${hardest.budget}, ${hardest.cells} cells)`
     );
   }
-  if (grids.size < 4) fail(album.id, `only ${grids.size} grid shapes appear in this album`);
+  // One tiling means variety is the silhouettes' job now — an album that never
+  // cuts a shape is 18 rectangles, which reads as a bug rather than an edition.
+  if (grids.size !== 1 || !grids.has('square')) fail(album.id, 'every board must be a square grid');
+  if (silhouettes.size < 3) fail(album.id, `only ${silhouettes.size} silhouettes appear in this album`);
   if (modes.size < 2) fail(album.id, 'this album never uses the replace rule set');
   if (goals.size < 2) fail(album.id, 'this album never uses the recipe goal');
 }
